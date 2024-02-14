@@ -1,40 +1,26 @@
-#include <iostream>
-#include "vendors/GLFW/glfw3.h"
+#include "Scop.hpp"
+#include "Model/Model.hpp"
+#include "Material/Material.hpp"
 
 using namespace std;
 
-int main(void)
+int	mainGLFW(Model& model);
+
+int main(int ac, char **av)
 {
-    GLFWwindow* window;
+	if (av[1] == NULL)
+	{
+		cout << "No object file specified" << endl;
+		return 1;
+	}
 
-    /* Initialize the library */
-    if (!glfwInit())
-        return -1;
+	Model model(av[1]);
 
-    /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
-    if (!window)
-    {
-        glfwTerminate();
-        return -1;
-    }
+	model.loadModel();
 
-    /* Make the window's context current */
-    glfwMakeContextCurrent(window);
+	cout << model;
 
-    /* Loop until the user closes the window */
-    while (!glfwWindowShouldClose(window))
-    {
-        /* Render here */
-        glClear(GL_COLOR_BUFFER_BIT);
+	mainGLFW(model);
 
-        /* Swap front and back buffers */
-        glfwSwapBuffers(window);
-
-        /* Poll for and process events */
-        glfwPollEvents();
-    }
-
-    glfwTerminate();
-    return 0;
+	return 0;
 }
