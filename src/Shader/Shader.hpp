@@ -1,18 +1,15 @@
-#ifndef SHADER_H
-    #define SHADER_H
 
-#include "../vendors/glad/glad.h"
-#include "../vendors/GLFW/glfw3.h"
-// #include "../vendors/glm/glm.hpp"
-// #include "../vendors/glm/gtc/matrix_transform.hpp"
-// #include "../vendors/glm/gtc/type_ptr.hpp"
-#include "math.hpp"
-#include "../Scop.hpp"
+#pragma once
+
 #include <iomanip>
 #include <fstream>
 #include <sstream>
 #include <streambuf>
 #include <string> 
+
+#include "../vendors/glad/glad.h"
+#include "../vendors/GLFW/glfw3.h"
+#include "../Scop.hpp"
 
 class Shader {
     public:
@@ -27,5 +24,3 @@ class Shader {
         // uniform functions
         void setMat4(std::string name, Mat4 val);
 };
-
-#endif

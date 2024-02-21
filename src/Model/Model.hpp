@@ -29,6 +29,7 @@ class Model
 
 	void					loadModel();
 	void					parseLine(string line);
+
 	void					parseVertex(string line);
 	void					parseFace(string line);
 	void					parseMaterialLib(string line);
