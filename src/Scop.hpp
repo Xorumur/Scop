@@ -14,7 +14,5 @@
 #include <limits>
 #include <memory>
 #include <functional>
-#include "Math/Vector.hpp"
-#include "Math/Matrix.hpp"
 
 using namespace std;

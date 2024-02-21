@@ -1,6 +1,7 @@
-#include <iostream>
+#ifndef VECTOR_HPP
+# define VECTOR_HPP
 
-#pragma once
+#include <iostream>
 
 using namespace std;
 
@@ -57,3 +58,5 @@ class Vec3 {
 			return *this;
 		}
 };
+
+#endif

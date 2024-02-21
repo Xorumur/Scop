@@ -1,6 +1,11 @@
-#pragma once
+#ifndef MATERIAL_HPP
+# define MATERIAL_HPP
 
-#include "../Scop.hpp"
+#include <iostream>
+#include <string>
+#include <vector>
+#include <fstream>
+#include <sstream>
 
 using namespace std;
 
@@ -39,3 +44,5 @@ class Material
 	// print operator overload
 	friend ostream& operator<<(ostream& os, const Material& material);
 };
+
+#endif

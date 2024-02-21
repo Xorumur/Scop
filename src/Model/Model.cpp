@@ -1,5 +1,4 @@
 #include "Model.hpp"
-#include "../vendors/GLFW/glfw3.h"
 
 using namespace std;
 
@@ -78,7 +77,16 @@ void Model::parseFace(string line)
 	while (ss >> value) {
 		face.push_back(value);
 	}
-	this->faces.push_back(face);
+
+	// Triangulate the face if it has 4 vertices
+	if (face.size() == 4) {
+		vector<int> newFace1 = { face[0], face[1], face[2] };
+		vector<int> newFace2 = { face[2], face[3], face[0] };
+		this->faces.push_back(newFace1);
+		this->faces.push_back(newFace2);
+	}
+	else
+		this->faces.push_back(face);
 }
 
 void Model::parseMaterialLib(string line)
@@ -142,35 +150,30 @@ void Model::Scale(float scale)
 	// Scale the model uniformly by a specified factor.
 }
 
-void Model::drawModel()
-{
+// void Model::drawModel()
+// {
 
 
-	// Set ambient color
-	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, this->material.ambient);
-	// Set diffuse color
-	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, this->material.diffuse);
-	// Set specular color
-	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, this->material.specular);
-	// Set shininess/exponent
-	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, this->material.Ns);
+// 	// Set ambient color
+// 	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, this->material.ambient);
+// 	// Set diffuse color
+// 	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, this->material.diffuse);
+// 	// Set specular color
+// 	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, this->material.specular);
+// 	// Set shininess/exponent
+// 	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, this->material.Ns);
 
-	for (auto& face : this->faces) {
-		if (face.size() == 3)
-			glBegin(GL_TRIANGLES);
-		else if (face.size() == 4)
-			glBegin(GL_QUADS);
-
-        
-		for (auto& vertex : face) {
-			float color[3];
-			randomColorTest(color);
-			glColor3fv(color);
-			glVertex3fv(&this->vertices[vertex - 1][0]);
-		}
-		glEnd();
-	}
-}
+// 	for (auto& face : this->faces) {
+// 		glBegin(GL_TRIANGLES);
+// 		for (auto& vertex : face) {
+// 			float color[3];
+// 			randomColorTest(color);
+// 			glColor3fv(color);
+// 			glVertex3fv(&this->vertices[vertex - 1][0]);
+// 		}
+// 		glEnd();
+// 	}
+// }
 
 ostream& operator<<(ostream& os, const Model& model)
 {

@@ -1,8 +1,9 @@
+#ifndef MATRIX_HPP
+# define MATRIX_HPP
+
 #include <iostream>
 #include <cmath>
 #include "./Vector.hpp"
-
-#pragma once
 
 using namespace std;
 
@@ -89,3 +90,5 @@ class Mat4 {
             return &mat[0][0];
         }
 };
+
+#endif

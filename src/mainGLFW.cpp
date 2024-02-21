@@ -1,8 +1,6 @@
-#include <iostream>
-#include "vendors/GLFW/glfw3.h"
-#include "Model/Model.hpp"
-#include "Material/Material.hpp"
 #include "Scop.hpp"
+#include "Model/Model.hpp"
+#include "Shader/Shader.hpp"
 
 #define GL_SILENCE_DEPRECATION true
 
@@ -61,71 +59,24 @@ static void keyCallback(GLFWwindow* window, int key, int scancode, int action, i
     }
 }
 
-// float triangleVertices[] = {
-//     -0.6f, -0.4f, -1.0f,
-//      0.6f, -0.4f, -1.0f,
-//      0.0f,  0.6f,  1.0f
-// };
-
-// float quadVertices[12][9] = {
-// 	// South face
-// 	{ 0, 0, 0,    0, 1, 0,    1, 1, 0, },
-// 	{ 0, 0, 0,    1, 1, 0,    1, 0, 0, },
-
-// 	// East face
-// 	{ 1, 0, 0,    1, 1, 0,    1, 1, 1, },
-// 	{ 1, 0, 0,    1, 1, 1,    1, 0, 1, },
-
-// 	// North face
-// 	{ 1, 0, 1,    1, 1, 1,    0, 1, 1, },
-// 	{ 1, 0, 1,    0, 1, 1,    0, 0, 1, },
-
-// 	// West face
-// 	{ 0, 0, 1,    0, 1, 1,    0, 1, 0, },
-// 	{ 0, 0, 1,    0, 1, 0,    0, 0, 0, },
-
-// 	// Top face
-// 	{ 0, 1, 0,    0, 1, 1,    1, 1, 1, },
-// 	{ 0, 1, 0,    1, 1, 1,    1, 1, 0, },
-
-// 	// Bottom face
-// 	{ 1, 0, 1,    0, 0, 1,    0, 0, 0, },
-// 	{ 1, 0, 1,    0, 0, 0,    1, 0, 0, },
-// };
-
-// // Colors for 6 faces
-// float quadColors[6][3] = {
-// 	{ 1, 0, 0 },
-// 	{ 0, 1, 0 },
-// 	{ 0, 0, 1 },
-// 	{ 1, 1, 0 },
-// 	{ 1, 0, 1 },
-// 	{ 0, 1, 1 },
-// };
-
-// void drawQuad() {
-// 	int i = 0;
-// 	float color[3];
-// 	for (auto& vertex : quadVertices) {
-// 		glBegin(GL_TRIANGLES);
-// 		glColor3fv(&quadColors[i / 2][0]);
-// 		glVertex3fv(&vertex[0]);
-// 		glVertex3fv(&vertex[3]);
-// 		glVertex3fv(&vertex[6]);
-// 		glEnd();
-// 		i++;
-// 	}
-// }
-
 GLFWwindow* initWindow()
 {
-	GLFWwindow* window;
+	GLFWwindow*		window;
 
 	glfwSetErrorCallback(errorCallbak);
 
 	/* Initialize the library */
 	if (!glfwInit())
 		return NULL;
+
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+	// For MACOS
+	#ifdef __APPLE__
+		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+	#endif
 
 	/* Create a windowed mode window and its OpenGL context */
 	window = glfwCreateWindow(720, 720, "Scop", NULL, NULL);
@@ -143,7 +94,7 @@ GLFWwindow* initWindow()
 	return window;
 }
 
-void	gameLoop(GLFWwindow* window, Model& model)
+void	gameLoop(GLFWwindow* window, Model& model, Shader& shaderProgram, unsigned int VAO)
 {
 	while (!glfwWindowShouldClose(window))
 	{
@@ -157,24 +108,28 @@ void	gameLoop(GLFWwindow* window, Model& model)
 		glViewport(0, 0, width, height);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		glOrtho(-ratio, ratio, -1.f, 1.f, 1.f, -1.f);
-		glMatrixMode(GL_MODELVIEW);
+		// trans = glm::rotate(trans, glm::radians((float)glfwGetTime() / 100.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		// glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "transform"), 1, GL_FALSE, glm::value_ptr(trans));
 
-		glLoadIdentity();
+		// draw shapes
+		glBindVertexArray(VAO);
 
-		// Translate = Move the model
-        glTranslatef(camX, camY, camZ);
+		glUseProgram(shaderProgram.id);
 
-		// Scale = Zoom in/out
-		glScalef(scale, scale, scale);
+		// Draw the model with all the data we set up
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-		// Rotate the model with X and Y
-		glRotatef(rotationX, 1.0f, 0.0f, 0.0f);
-        glRotatef(rotationY, 0.0f, 1.0f, 0.0f);
+		// // Translate = Move the model
+		// glTranslatef(camX, camY, camZ);
 
-		model.drawModel();
+		// // Scale = Zoom in/out
+		// glScalef(scale, scale, scale);
+
+		// // Rotate the model with X and Y
+		// glRotatef(rotationX, 1.0f, 0.0f, 0.0f);
+        // glRotatef(rotationY, 0.0f, 1.0f, 0.0f);
+
+		// // model.drawModel();
 
 		/* Swap front and back buffers */
 		glfwSwapBuffers(window);
@@ -184,12 +139,51 @@ void	gameLoop(GLFWwindow* window, Model& model)
 	}
 }
 
+void	initBuffersData(unsigned int *VAO, unsigned int *VBO, unsigned int *EBO, Model& model)
+{
+
+	cout << "glGenVertexArrays" << endl;
+	glGenVertexArrays(1, VAO);
+	glGenBuffers(1, VBO);
+	glGenBuffers(1, EBO);
+
+	// Bind the Vertex Array Object first, then bind and set vertex buffer and faces buffer.
+	glBindVertexArray(*VAO);
+
+	// VBO is our array of vertices (Vextex Buffer Object), we bind it to our VAO
+	glBindBuffer(GL_ARRAY_BUFFER, *VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(model.vertices[0]) * model.vertices.size(), &model.vertices[0], GL_STATIC_DRAW);
+
+	// EBO is our array of faces (Element Buffer Object), we bind it to our VAO
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(model.faces[0]) * model.faces.size(), &model.faces[0], GL_STATIC_DRAW);
+
+	// glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	// glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	// VAO will contain the layout of our VBO and EBO
+}
+
 int mainGLFW(Model& model)
 {
 	GLFWwindow* window = initWindow();
 	if (!window) return 1;
 
-	gameLoop(window, model);
+	cout << "Loading shaders..." << endl;
+	Shader shader = Shader("src/Shader/Programs/vertex.glsl", "src/Shader/Programs/fragment.glsl");
+	cout << "Shaders loaded" << endl;
+
+	cout << "Init buffers data..." << endl;
+	unsigned int VAO, VBO, EBO;
+	initBuffersData(&VAO, &VBO, &EBO, model);
+	cout << "Buffers data initialized" << endl;
+
+	gameLoop(window, model, shader, VAO);
 
 	glfwDestroyWindow(window);
 

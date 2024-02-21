@@ -1,19 +1,23 @@
 #include "Shader.hpp"
 
 Shader::Shader(const char * vertexShaderPath, const char * fragmentShaderPath) {
+	int success;
+	char infoLog[512];
+
+	cout << "vertexShaderPath = " << vertexShaderPath << endl;
+	cout << "fragmentShaderPath = " << fragmentShaderPath << endl;
+
 	GLuint vertexShader = compileShader(vertexShaderPath, GL_VERTEX_SHADER);
 	GLuint fragmentShader = compileShader(fragmentShaderPath, GL_FRAGMENT_SHADER);
 
-	id = glCreateProgram();
-	glAttachShader(id, vertexShader);
-	glAttachShader(id, fragmentShader);
-	glLinkProgram(id);
+	this->id = glCreateProgram();
+	glAttachShader(this->id, vertexShader);
+	glAttachShader(this->id, fragmentShader);
+	glLinkProgram(this->id);
 
-	int success;
-	char infoLog[512];
-	glGetProgramiv(id, GL_LINK_STATUS, &success);
+	glGetProgramiv(this->id, GL_LINK_STATUS, &success);
 	if (!success) {
-		glGetProgramInfoLog(id, 512, NULL, infoLog);
+		glGetProgramInfoLog(this->id, 512, NULL, infoLog);
 		cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << endl;
 	}
 
@@ -22,19 +26,25 @@ Shader::Shader(const char * vertexShaderPath, const char * fragmentShaderPath) {
 }
 
 GLuint Shader::compileShader(const char* filepath, GLenum type) {
-	GLuint shader = glCreateShader(type);
-	string shaderString = loadShaderString(filepath);
-	const char* shaderSource = shaderString.c_str();
-	glShaderSource(shader, 1, &shaderSource, NULL);
-	glCompileShader(shader);
-
 	int success;
-	char infoLog[512];
-	glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-	if (!success) {
-		glGetShaderInfoLog(shader, 512, NULL, infoLog);
-		cout << "ERROR::SHADER::" << (type == GL_VERTEX_SHADER ? "VERTEX" : "FRAGMENT") << "::COMPILATION_FAILED\n" << infoLog << endl;
-	}
+	char infolog[512];
+
+	// Compile shader
+    unsigned int shader;
+    shader = glCreateShader(type);
+
+    string shaderSrc = this->loadShaderString(filepath);
+    const GLchar* shaderc_str = shaderSrc.c_str();
+    
+	glShaderSource(shader, 1, &shaderc_str, NULL);
+    glCompileShader(shader);
+
+    // Catch error
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        glGetShaderInfoLog(shader, 512, NULL, infolog);
+        cout << "Error with vertex shader compilation : " << infolog << endl;
+    }
 
 	return shader;
 }
@@ -44,22 +54,24 @@ void Shader::activate() {
 }
 
 string Shader::loadShaderString(const char *filename) {
-    ifstream file;
-    stringstream buf;
+	ifstream file;
+	stringstream buf;
 
-    string ret("");
+	string ret("");
 
-    file.open(filename);
+	file.open(filename);
 
-    if (file.is_open()) {
-        buf << file.rdbuf();
-        ret = buf.str();
-    }
-    else {
-        cout << "Could not open " << filename << endl;
-    }
+	if (file.is_open()) {
+		buf << file.rdbuf();
+		ret = buf.str();
+	}
+	else {
+		cout << "Could not open " << filename << endl;
+	}
 
-    file.close();
+	cout << "src = " << ret << endl;
 
-    return ret;
+	file.close();
+
+	return ret;
 };

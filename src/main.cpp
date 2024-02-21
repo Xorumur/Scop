@@ -1,6 +1,5 @@
 #include "Scop.hpp"
 #include "Model/Model.hpp"
-#include "Material/Material.hpp"
 
 using namespace std;
 
@@ -16,9 +15,11 @@ int main(int ac, char **av)
 
 	Model model(av[1]);
 
+	cout << "Loading model..." << endl;
 	model.loadModel();
+	cout << "Model loaded" << endl;
 
-	cout << model;
+	// cout << model;
 
 	mainGLFW(model);
 

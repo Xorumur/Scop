@@ -1,6 +1,6 @@
-#pragma once
+#ifndef MODEL_HPP
+# define MODEL_HPP
 
-#include "../Scop.hpp"
 #include "../Material/Material.hpp"
 
 // A shaderProgram consists of at least two types of shaders:
@@ -46,8 +46,10 @@ class Model
 	// Scale the model uniformly by a specified factor.
 	void	Scale(float scale);
 
-	void	drawModel();
+	// void	drawModel();
 
 	// print operator overload
 	friend ostream& operator<<(ostream& os, const Model& model);
 };
+
+#endif
