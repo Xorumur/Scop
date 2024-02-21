@@ -14,3 +14,6 @@
 #include <limits>
 #include <memory>
 #include <functional>
+#include "Math/math.hpp"
+
+using namespace std;
