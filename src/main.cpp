@@ -7,17 +7,87 @@
 #include <fstream>
 #include <sstream>
 #include <streambuf>
-#include <string> 
+#include <string>
+#include "Model/Model.hpp"
 
 using namespace std;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void processInput(GLFWwindow *window);
 string loadShaderSrc(const char *filename); 
 void printMat4(const glm::mat4& matrix);
 
-int main(void)
+Mat4	finalMatrix = Mat4();
+
+Mat4	rotationMatrix = Mat4();
+Mat4	scaleMatrix = Mat4();
+Mat4	translationMatrix = Mat4();
+
+Mat4	createFinalMatrix()
 {
+	finalMatrix = Mat4();
+	finalMatrix = finalMatrix * rotationMatrix;
+	finalMatrix = finalMatrix * scaleMatrix;
+	finalMatrix = finalMatrix * translationMatrix;
+	return finalMatrix;
+}
+
+float zoomFactor = 0.2f;
+
+// Keep track of the current rotation angle and the direction of rotation
+float rotationAngle = 0.f;
+float rotationDirectionX = 1.f;
+float rotationDirectionY = 1.f;
+
+static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
+	
+	if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+        switch (key) {
+			// Make WASD rotate the model
+			case GLFW_KEY_W:
+				rotationMatrix = rotationMatrix.rotate(10.f, 1.f, 0.f, 0.f);
+				break;
+			case GLFW_KEY_S:
+				rotationMatrix = rotationMatrix.rotate(10.f, -1.f, 0.f, 0.f);
+				break;
+			case GLFW_KEY_A:
+				rotationMatrix = rotationMatrix.rotate(10.f, 0.0f, 1.f, 0.f);
+				break;
+			case GLFW_KEY_D:
+				rotationMatrix = rotationMatrix.rotate(10.f, 0.0f, -1.f, 0.f);
+				break;
+		}
+	}
+}
+
+void scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	float zoomFactor = 0.1f;
+
+	// Zoom in
+	if (yoffset > 0)
+		scaleMatrix.scale(Vec3(1.0f + zoomFactor, 1.0f + zoomFactor, 1.0f + zoomFactor));
+	// Zoom out
+	else
+		scaleMatrix.scale(Vec3(1.0f - zoomFactor, 1.0f - zoomFactor, 1.0f - zoomFactor));
+}
+
+int main(int ac, char **av)
+{
+	if (av[1] == NULL)
+	{
+		cout << "No object file specified" << endl;
+		return 1;
+	}
+
+	Model model(av[1]);
+
+	cout << "Loading model..." << endl;
+	model.loadModel();
+	cout << "Model loaded" << endl;
+
     int success;
     char infolog[512];
 
@@ -52,6 +122,9 @@ int main(void)
     glViewport(0, 0, 800, 600);
 
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);  
+		
+	glfwSetKeyCallback(window, keyCallback);
+	glfwSetScrollCallback(window, scrollCallback);
 
     // shaders 
 
@@ -133,20 +206,9 @@ int main(void)
     glDeleteShader(fragmentShaders[0]);
     glDeleteShader(fragmentShaders[1]);
 
-    // vertex array
 
-    float vertices[] = {
-        // positions            // color
-        -0.25f, -0.5f, 0.0f,    1.0f, 1.0f, 0.5f,
-        0.15f, 0.0f, 0.0f,      0.5f, 1.0f, 0.75f,
-        0.0f, 0.5f, 0.0f,       0.6f, 1.0f, 0.2f,
-        0.5f, -0.4f, 0.0f,      1.0f, 0.2f, 1.0f   
-    };
-
-    unsigned int indices[] = {
-        0, 1, 2,
-        3, 1, 2
-    };
+	float* vertices2 = model.transformVertices();
+	int* faces = model.transformFaces(); 
 
 
     // VAO, VBO
@@ -160,46 +222,42 @@ int main(void)
 
     // bind VBO
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * model.vertices.size() * 3, vertices2, GL_STATIC_DRAW);
 
     // set attribute pointer
 
     // positions
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-
-    // color
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
 
     // set up EBO
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * model.faces.size() * 3, faces, GL_STATIC_DRAW);
 
-    glm::mat4 trans = glm::mat4(1.0f);
-    trans = glm::rotate(trans, glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    // glm::mat4 trans = glm::rotate(trans, glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+	// glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(0.2, 0.2, 0.2));
+	scaleMatrix.scale(Vec3(0.2, 0.2, 0.2));
     glUseProgram(shaderPrograms[0]);
-    glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "transform"), 1, GL_FALSE, glm::value_ptr(trans));
-
+    // glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "transform"), 1, GL_FALSE, glm::value_ptr(scaleMatrix));
     while(!glfwWindowShouldClose(window))
     {
-        // process input
-        processInput(window);
-
         // rendering
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT); 
 
-        trans = glm::rotate(trans, glm::radians((float)glfwGetTime() / 100.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "transform"), 1, GL_FALSE, glm::value_ptr(trans));
+        // trans = glm::rotate(trans, glm::radians((float)glfwGetTime() / 100.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        // // glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "transform"), 1, GL_FALSE, glm::value_ptr(trans));
+		
+		// scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(0.2, 0.2, 0.2));
+
+		glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "transform"), 1, GL_FALSE, createFinalMatrix().GetDataPtr());
 
         // draw shapes
         glBindVertexArray(VAO);
 
         // First triangle
         glUseProgram(shaderPrograms[0]);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, model.faces.size() * 3, GL_UNSIGNED_INT, 0);
 
         // second triangle
         // glUseProgram(shaderPrograms[1]);
@@ -221,12 +279,6 @@ int main(void)
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
-}
-
-void processInput(GLFWwindow *window)
-{
-    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
 }
 
 string loadShaderSrc(const char *filename) {

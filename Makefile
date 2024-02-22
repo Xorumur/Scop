@@ -1,12 +1,15 @@
-CXX = clang++
+CXX = clang++ -std=c++11 -w
 
 APP_INCLUDES:= -I./src/vendors/GLFW -framework Cocoa -framework OpenGL -framework IOKit
 APP_LINKER:= -L./src/vendors/GLFW/lib -lglfw3
-C_FILES = ./src/*.c*
+
+CPP_FILES = ${wildcard src/*.cpp} ${wildcard src/Material/*.cpp} ${wildcard src/Model/*.cpp} ${wildcard src/Shader/*.cpp}
+C_FILES = ./src/glad.c
+
 TARGET = scope
 
 all:
-	$(CXX) $(C_FILES) $(APP_INCLUDES) $(APP_LINKER) -o scope
+	$(CXX) $(C_FILES) $(CPP_FILES) $(APP_INCLUDES) $(APP_LINKER) -o scope
 
 clean:
 	rm -rf scope
