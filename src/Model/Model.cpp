@@ -1,13 +1,9 @@
 #include "Model.hpp"
+#include "../include/lib.h"
 
 using namespace std;
 
-// Function to generate a random r g b color for the vertices
-void randomColorTest(float* color) {
-	for (int i = 0; i < 3; ++i) {
-		color[i] = (rand() % 100) / 100.0f;
-	}
-}
+Model::Model() { }
 
 Model::Model(string filePath)
 {
@@ -39,10 +35,10 @@ void Model::parseLine(string line)
 		this->parseFace(line);
 	}
 	else if (line[0] == 'm' && line[1] == 't' && line[2] == 'l' && line[3] == 'l' && line[4] == 'i' && line[5] == 'b') {
-		this->parseMaterialLib(line);
+		this->parseTextureLib(line);
 	}
 	else if (line[0] == 'u' && line[1] == 's' && line[2] == 'e' && line[3] == 'm' && line[4] == 't' && line[5] == 'l') {
-		this->parseMaterial(line);
+		this->parseTexture(line);
 	}
 	else if (line[0] == 's' && line[1] == ' ') {
 		this->parseSmoothing(line);
@@ -89,7 +85,7 @@ void Model::parseFace(string line)
 		this->faces.push_back(face);
 }
 
-void Model::parseMaterialLib(string line)
+void Model::parseTextureLib(string line)
 {
 	stringstream ss(line);
 	string word;
@@ -97,12 +93,23 @@ void Model::parseMaterialLib(string line)
 
 	ss >> word;
 	ss >> value;
-	this->materialLib = value;
-	this->material.filePath = "resources/" + value;
-	this->material.loadMaterial();
+	this->textureLib = value;
+	// The texture file path is the same as the object file path but with the .mtl extension
+	this->texture.filePath = this->filePath.substr(0, this->filePath.find_last_of('.')) + ".mtl";
+
+	cout << "Texture file path: " << this->texture.filePath << endl;
+
+	cout << "Loading texture..." << endl;
+	this->textureAvailable = this->texture.loadTexture();
+
+	if (this->textureAvailable == false)
+		cout << "Texture not found / unavailable" << endl;
+	else
+		cout << "Texture loaded: " << this->texture << endl;
+
 }
 
-void Model::parseMaterial(string line)
+void Model::parseTexture(string line)
 {
 	stringstream ss(line);
 	string word;
@@ -110,7 +117,7 @@ void Model::parseMaterial(string line)
 
 	ss >> word;
 	ss >> value;
-	this->material.materialName = value;
+	this->texture.textureName = value;
 }
 
 void Model::parseSmoothing(string line)
@@ -135,54 +142,50 @@ void Model::parseObjectName(string line)
 	this->modelName = value;
 }
 
-void Model::Rotate(float angleX, float angleY, float angleZ)
+// Rotate the model by specified angles around the X, Y, and Z axes.
+void Model::Rotate(float angle, float dirX, float dirY, float dirZ)
 {
-	// Rotate the model by specified angles around the X, Y, and Z axes.
+	this->rotationMatrix = this->rotationMatrix.rotate(angle, dirX, dirY, dirZ);
 }
 
+// Translate (move) the model by specified offsets in the X, Y, and Z directions.
 void Model::Translate(float offsetX, float offsetY, float offsetZ)
 {
-	// Translate (move) the model by specified offsets in the X, Y, and Z directions.
+	this->translationMatrix.translate(Vec3(offsetX, offsetY, offsetZ));
 }
 
+// Scale the model uniformly by a specified factor.
 void Model::Scale(float scale)
 {
-	// Scale the model uniformly by a specified factor.
+	this->scaleMatrix.scale(Vec3(scale, scale, scale));
 }
 
-// void Model::drawModel()
-// {
-
-
-// 	// Set ambient color
-// 	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, this->material.ambient);
-// 	// Set diffuse color
-// 	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, this->material.diffuse);
-// 	// Set specular color
-// 	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, this->material.specular);
-// 	// Set shininess/exponent
-// 	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, this->material.Ns);
-
-// 	for (auto& face : this->faces) {
-// 		glBegin(GL_TRIANGLES);
-// 		for (auto& vertex : face) {
-// 			float color[3];
-// 			randomColorTest(color);
-// 			glColor3fv(color);
-// 			glVertex3fv(&this->vertices[vertex - 1][0]);
-// 		}
-// 		glEnd();
-// 	}
-// }
+Mat4 Model::createFinalMatrix()
+{
+	// Create final transformation matrix
+	Mat4 finalMatrix = Mat4();
+	finalMatrix = finalMatrix * rotationMatrix;
+	finalMatrix = finalMatrix * scaleMatrix;
+	finalMatrix = finalMatrix * translationMatrix;
+	return finalMatrix;
+}
 
 float*					Model::transformVertices() {
-	float* vertices = new float[this->vertices.size() * 3];
+	float* vertices = new float[this->vertices.size() * currMode];
 	int i = 0;
 	for (auto& vertex : this->vertices) {
 		vertices[i] = vertex[0];
 		vertices[i + 1] = vertex[1];
 		vertices[i + 2] = vertex[2];
-		i += 3;
+		if (vertex.size() == 6 ) {
+			vertices[i + 3] = vertex[3];
+			vertices[i + 4] = vertex[4];
+			vertices[i + 5] = vertex[5];
+			i += 6;
+		}
+		else {
+			i += 3;
+		}
 	}
 	return vertices;
 }
@@ -199,13 +202,107 @@ int*					Model::transformFaces() {
 	return faces;
 }
 
+void printVertices(vector<vector<float>> vertices) {
+	for (auto& vertex : vertices) {
+		cout << "Vertex: ";
+		for (auto& value : vertex) {
+			cout << value << " ";
+		}
+		cout << endl;
+	}
+}
+
+float randomFloat() {
+	return static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+}
+
+void Model::setVertices(int mode)
+{
+	vector<vector<float>> newVertices;
+
+	if (mode == 0) {
+		for (int i = 0; i < this->vertices.size(); i++) {
+			vector<float> vertex = this->vertices[i];
+			vertex.push_back(1.0f);
+			vertex.push_back(1.0f);
+			newVertices.push_back(vertex);
+		}
+		printVertices(newVertices);
+	}
+	else if (mode == COLOR_MODE) {
+		for (int i = 0; i < this->vertices.size(); i++) {
+			vector<float> vertex = this->vertices[i];
+			// Replace / Insert the color values at the end of the vertex / at the 3rd index
+			if (vertex.size() == 3) {
+				vertex.push_back(randomFloat());
+				vertex.push_back(randomFloat());
+				vertex.push_back(randomFloat());
+			}
+			else {
+				vertex[3] = randomFloat();
+				vertex[4] = randomFloat();
+				vertex[5] = randomFloat();
+			}
+			newVertices.push_back(vertex);
+		}
+		this->currMode = COLOR_MODE;
+		this->vertices = newVertices;
+		setupBuffers();
+	}
+
+	// this->vertices = this->vertices;
+}
+
+void Model::loadTexture() {
+	this->texture.loadTexture();
+}
+
+void Model::setupBuffers() {
+	float* vertices = this->transformVertices();
+	int* faces = this->transformFaces(); 
+
+	glGenVertexArrays(1, &VAO);
+	glGenBuffers(1, &VBO);
+	glGenBuffers(1, &EBO);
+
+	// bind VAO
+	glBindVertexArray(VAO);
+
+	// bind VBO
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * this->vertices.size() * currMode, vertices, GL_STATIC_DRAW);
+
+	// set attribute pointer
+
+	// positions
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, currMode * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	// colors
+	if (currMode == COLOR_MODE) {
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, currMode * sizeof(float), (void*)(3 * sizeof(float))); // Décalage de 3 composantes
+		glEnableVertexAttribArray(1);
+	}
+
+	// set up EBO
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * this->faces.size() * 3, faces, GL_STATIC_DRAW);
+}
+
+void Model::deleteBuffers() {
+	glDeleteVertexArrays(1, &VAO);
+	glDeleteBuffers(1, &VBO);
+	glDeleteBuffers(1, &EBO);
+}
+
+
 ostream& operator<<(ostream& os, const Model& model)
 {
 	os << "Model: " << model.modelName << endl;
 	os << "  Smoothing: " << model.smoothing << endl;
 	os << "  Vertices: " << model.vertices.size() << endl;
 	os << "  Faces: " << model.faces.size() << endl;
-	os << "  Material Library: " << model.materialLib << endl;
-	os << model.material << endl;
+	os << "  Texture Library: " << model.textureLib << endl;
+	os << model.texture << endl;
 	return os;
 }

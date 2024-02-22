@@ -1,7 +1,16 @@
 #ifndef MODEL_HPP
 # define MODEL_HPP
 
-#include "../Material/Material.hpp"
+#include "../Texture/Texture.hpp"
+#include "../Math/Matrix.hpp"
+
+using namespace std;
+
+#define TEXT_MODE 8
+#define COLOR_MODE 6
+#define DOT_MODE 2
+
+
 
 // A shaderProgram consists of at least two types of shaders:
 // 	-	Vertex Shader (vertexShader): Processes each vertex of a 3D model, transforming its position and passing data to the next stages of the pipeline.
@@ -17,25 +26,46 @@ class Model
 
 	string					modelName; // o: Indicates the start of a new object in the .obj file
 
-	string					materialLib; // mtllib: Specifies the material library file.
-	Material				material; // usemtl: Specifies the material used for the faces following it.
+	string					textureLib; // mtllib: Specifies the texture library file.
+	Texture					texture; // usemtl: Specifies the texture used for the faces following it.
 	string					smoothing; // s: Smoothing on or off (on is the default)
+
+	bool					textureAvailable = false;
 
 	vector<vector<float> >	vertices; // v: Geometric vertices
 	vector<vector<int> >	faces; // f: Face elements
 
+	// Matrices to store the transformations
+	Mat4 					rotationMatrix = Mat4();
+	Mat4 					scaleMatrix = Mat4();
+	Mat4 					translationMatrix = Mat4();
+
+	int						currMode = 3;
+
+	// VAO, VBO, and EBO
+	unsigned int			VAO, VBO, EBO;
+
+	Model();
 	Model(string filePath);
 	~Model();
 
+	// Parse the .obj file and load the model
 	void					loadModel();
 	void					parseLine(string line);
-
 	void					parseVertex(string line);
 	void					parseFace(string line);
-	void					parseMaterialLib(string line);
-	void					parseMaterial(string line);
+	void					parseTextureLib(string line);
+	void					parseTexture(string line);
 	void					parseSmoothing(string line);
 	void					parseObjectName(string line);
+
+	// VAO, VBO, and EBO functions
+	void 					setupBuffers();
+	void					deleteBuffers();
+	void					setVertices(int mode);
+
+	// Textures functions
+	void 					loadTexture();
 
 	// Function to transform vertices into a 1D array of floats
 	float*					transformVertices();
@@ -44,7 +74,7 @@ class Model
 	int*					transformFaces();
 
 	// Rotate the model by specified angles around the X, Y, and Z axes.
-	void	Rotate(float angleX, float angleY, float angleZ);
+	void	Rotate(float angle, float dirX, float dirY, float dirZ);
 
 	// Translate (move) the model by specified offsets in the X, Y, and Z directions.
 	void	Translate(float offsetX, float offsetY, float offsetZ);
@@ -52,10 +82,13 @@ class Model
 	// Scale the model uniformly by a specified factor.
 	void	Scale(float scale);
 
-	// void	drawModel();
+	// Create final transformation matrix
+	Mat4	createFinalMatrix();
 
 	// print operator overload
 	friend ostream& operator<<(ostream& os, const Model& model);
 };
+
+
 
 #endif

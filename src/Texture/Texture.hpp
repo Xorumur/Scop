@@ -1,5 +1,5 @@
-#ifndef MATERIAL_HPP
-# define MATERIAL_HPP
+#ifndef TEXTURE_HPP
+# define TEXTURE_HPP
 
 #include <iostream>
 #include <string>
@@ -9,30 +9,30 @@
 
 using namespace std;
 
-class Material
+class Texture
 {
 	public:
 
 	string					filePath;
-	string					materialName; // newmtl: Declares the name of a material
+	string					textureName; // newmtl: Declares the name of a texture
 
 	float					ambient[3]; // Ka: Ambient color
 	float					diffuse[3]; // Kd: Diffuse color
 	float					specular[3]; // Ks: Specular color
-	
+
 	float					Ns; // Ns: Specular exponent
 	float 					Ni; // Ni: Optical density
 
 	float					d; // d: Dissolve factor (transparency)
 	float					illum; // illum: Illumination model
 
-	Material();
-	Material(string path);
-	~Material();
+	Texture();
+	Texture(string path);
+	~Texture();
 
-	void					loadMaterial();
+	bool					loadTexture();
 	void					parseLine(string line);
-	void					parseMaterialName(string line);
+	void					parseTextureName(string line);
 	void					parseAmbient(string line);
 	void					parseDiffuse(string line);
 	void					parseSpecular(string line);
@@ -42,7 +42,7 @@ class Material
 	void					parseIlluminationModel(string line);
 
 	// print operator overload
-	friend ostream& operator<<(ostream& os, const Material& material);
+	friend ostream& operator<<(ostream& os, const Texture& texture);
 };
 
 #endif

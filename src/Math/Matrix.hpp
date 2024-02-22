@@ -1,72 +1,21 @@
+#pragma once
+
 #include <iostream>
 #include <cmath>
+#include "Vector.hpp"
 
 using namespace std;
 
-class Vec4 {
-    public : 
-        float x, y, z, w;
-
-        Vec4(float x, float y, float z, float w) : x(x), y(y), z(z), w(w) {}
-
-        void translate(float tx, float ty, float tz) {
-            x += tx;
-            y += ty;
-            z += tz;
-        }
-};
-
-class Vec3 {
-    public:
-        float x, y, z;
-
-        // Constructeur
-        Vec3(float _x, float _y, float _z) : x(_x), y(_y), z(_z) {}
-
-        // Affichage
-        void display() {
-            std::cout << "(" << x << ", " << y << ", " << z << ")" << std::endl;
-        }
-
-            // Produit vectoriel
-        Vec3 cross(const Vec3& other) const {
-            return Vec3(
-                y * other.z - z * other.y,
-                z * other.x - x * other.z,
-                x * other.y - y * other.x
-            );
-        }
-
-        // Produit scalaire
-        float dot(const Vec3& other) const {
-            return x * other.x + y * other.y + z * other.z;
-        }
-
-        // Norme du vecteur
-        float length() const {
-            return std::sqrt(x * x + y * y + z * z);
-        }
-
-        // Normalisation du vecteur
-        Vec3 normalize() const {
-            float len = length();
-            if (len != 0.0f) {
-                return Vec3(x / len, y / len, z / len);
-            }
-            return *this;
-        }
-};
-
 class Mat4 {
-    public:
-        float mat[4][4];
+	public:
+		float mat[4][4];
 
-        Mat4(float homogene = 1.0f) {
-            mat[0][0] = 1.0f; mat[0][1] = 0.0f; mat[0][2] = 0.0f; mat[0][3] = 0.0f;
-            mat[1][0] = 0.0f; mat[1][1] = 1.0f; mat[1][2] = 0.0f; mat[1][3] = 0.0f;
-            mat[2][0] = 0.0f; mat[2][1] = 0.0f; mat[2][2] = 1.0f; mat[2][3] = 0.0f;
-            mat[3][0] = 0.0f; mat[3][1] = 0.0f; mat[3][2] = 0.0f; mat[3][3] = homogene;
-        }
+		Mat4(float homogene = 1.0f) {
+			mat[0][0] = 1.0f; mat[0][1] = 0.0f; mat[0][2] = 0.0f; mat[0][3] = 0.0f;
+			mat[1][0] = 0.0f; mat[1][1] = 1.0f; mat[1][2] = 0.0f; mat[1][3] = 0.0f;
+			mat[2][0] = 0.0f; mat[2][1] = 0.0f; mat[2][2] = 1.0f; mat[2][3] = 0.0f;
+			mat[3][0] = 0.0f; mat[3][1] = 0.0f; mat[3][2] = 0.0f; mat[3][3] = homogene;
+		}
 
 		Mat4(Mat4 const &src) {
 			*this = src;

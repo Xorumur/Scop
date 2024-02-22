@@ -1,7 +1,7 @@
-#include "Material.hpp"
+#include "Texture.hpp"
 
-Material::Material() {
-	this->materialName = "";
+Texture::Texture() {
+	this->textureName = "";
 
 	this->ambient[0] = 0.0f; this->ambient[1] = 0.0f; this->ambient[2] = 0.0f;
 	this->diffuse[0] = 0.0f; this->diffuse[1] = 0.0f; this->diffuse[2] = 0.0f;
@@ -14,28 +14,29 @@ Material::Material() {
 	this->illum = 0.0f;
 }
 
-Material::Material(string filePath) : Material() {
+Texture::Texture(string filePath) : Texture() {
 	this->filePath = filePath;
 }
 
-Material::~Material() { }
+Texture::~Texture() { }
 
-void Material::loadMaterial() {
+bool	Texture::loadTexture() {
 	ifstream	file(this->filePath);
 	string		line;
 
 	if (!file.is_open()) {
-		cout << "loadMaterial: unable to open file: " << this->filePath << endl;
-		return ;
+		cout << "loadTexture: unable to open file: " << this->filePath << endl;
+		return false;
 	}
 	while (getline(file, line))
 		this->parseLine(line);
 	file.close();
+	return true;
 }
 
-void Material::parseLine(string line) {
+void Texture::parseLine(string line) {
 	if (line[0] == 'n' && line[1] == 'e' && line[2] == 'w' && line[3] == 'm' && line[4] == 't' && line[5] == 'l') {
-		this->parseMaterialName(line);
+		this->parseTextureName(line);
 	}
 	else if (line[0] == 'K' && line[1] == 'a') {
 		this->parseAmbient(line);
@@ -60,15 +61,15 @@ void Material::parseLine(string line) {
 	}
 }
 
-void Material::parseMaterialName(string line) {
+void Texture::parseTextureName(string line) {
 	stringstream ss(line);
 	string word;
 
 	ss >> word;
-	ss >> this->materialName;
+	ss >> this->textureName;
 }
 
-void Material::parseAmbient(string line) {
+void Texture::parseAmbient(string line) {
 	stringstream ss(line);
 	string word;
 
@@ -78,7 +79,7 @@ void Material::parseAmbient(string line) {
 	ss >> this->ambient[2];
 }
 
-void Material::parseDiffuse(string line) {
+void Texture::parseDiffuse(string line) {
 	stringstream ss(line);
 	string word;
 
@@ -88,7 +89,7 @@ void Material::parseDiffuse(string line) {
 	ss >> this->diffuse[2];
 }
 
-void Material::parseSpecular(string line) {
+void Texture::parseSpecular(string line) {
 	stringstream ss(line);
 	string word;
 
@@ -98,7 +99,7 @@ void Material::parseSpecular(string line) {
 	ss >> this->specular[2];
 }
 
-void Material::parseSpecularExponent(string line) {
+void Texture::parseSpecularExponent(string line) {
 	stringstream ss(line);
 	string word;
 
@@ -106,7 +107,7 @@ void Material::parseSpecularExponent(string line) {
 	ss >> this->Ns;
 }
 
-void Material::parseOpticalDensity(string line) {
+void Texture::parseOpticalDensity(string line) {
 	stringstream ss(line);
 	string word;
 
@@ -114,7 +115,7 @@ void Material::parseOpticalDensity(string line) {
 	ss >> this->Ni;
 }
 
-void Material::parseDissolve(string line) {
+void Texture::parseDissolve(string line) {
 	stringstream ss(line);
 	string word;
 
@@ -122,7 +123,7 @@ void Material::parseDissolve(string line) {
 	ss >> this->d;
 }
 
-void Material::parseIlluminationModel(string line) {
+void Texture::parseIlluminationModel(string line) {
 	stringstream ss(line);
 	string word;
 
@@ -130,15 +131,15 @@ void Material::parseIlluminationModel(string line) {
 	ss >> this->illum;
 }
 
-ostream& operator<<(ostream& os, const Material& material) {
-	os << "Material: '" << material.materialName << "'" << endl;
-	os << "  Ambient: " << material.ambient[0] << " | " << material.ambient[1] << " | " << material.ambient[2] << endl;
-	os << "  Diffuse: " << material.diffuse[0] << " | " << material.diffuse[1] << " | " << material.diffuse[2] << endl;
-	os << "  Specular: " << material.specular[0] << " | " << material.specular[1] << " | " << material.specular[2] << endl;
-	os << "  Specular exponent: " << material.Ns << endl;
-	os << "  Optical density: " << material.Ni << endl;
-	os << "  Dissolve factor: " << material.d << endl;
-	os << "  Illumination model: " << material.illum;
+ostream& operator<<(ostream& os, const Texture& texture) {
+	os << "Texture: '" << texture.textureName << "'" << endl;
+	os << "  Ambient: " << texture.ambient[0] << " | " << texture.ambient[1] << " | " << texture.ambient[2] << endl;
+	os << "  Diffuse: " << texture.diffuse[0] << " | " << texture.diffuse[1] << " | " << texture.diffuse[2] << endl;
+	os << "  Specular: " << texture.specular[0] << " | " << texture.specular[1] << " | " << texture.specular[2] << endl;
+	os << "  Specular exponent: " << texture.Ns << endl;
+	os << "  Optical density: " << texture.Ni << endl;
+	os << "  Dissolve factor: " << texture.d << endl;
+	os << "  Illumination model: " << texture.illum;
 	return os;
 }
 
