@@ -76,18 +76,17 @@ int main(int ac, char **av)
 	model.Scale(0.2);
 	shader.activate();
 
+	cout << model << endl;
+
 	while(!glfwWindowShouldClose(window))
 	{
 		// rendering
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+		glClearColor(0.2f, 0.4f, 0.8f, 1.0f);
 		glEnable(GL_DEPTH_TEST);
 		glShadeModel(GL_SMOOTH);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		// glDepthFunc(GL_LESS);
-		// Load all textures here
-		if (model.textureAvailable) {
-			
-		}
+	
+		model.Rotate(0.1f, 0.f, 1.f, 0.f);
 
 		glUniformMatrix4fv(glGetUniformLocation(shader.id, "transform"), 1, GL_FALSE, model.createFinalMatrix().GetDataPtr());
 		
@@ -117,6 +116,7 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 		glfwSetWindowShouldClose(window, true);
 	
 	if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+		// cout << "Key: " << key << endl;
 		switch (key) {
 			// Make WASD rotate the model
 			case GLFW_KEY_W:
@@ -131,11 +131,26 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 			case GLFW_KEY_D:
 				model.Rotate(10.f, 0.f, -1.f, 0.f);
 				break;
-			case GLFW_KEY_DOWN:
-				model.setVertices(TEXT_MODE);
+			case 321: // GLFW_KEY_1
+				// default mode
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 				break;
-			case GLFW_KEY_UP:
-				model.setVertices(COLOR_MODE);
+			case 322: // GLFW_KEY_2
+				// only edges mode
+				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+				break;
+			case 323: // GLFW_KEY_3
+				// only vertices mode
+				glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+				break;
+			case 324: // GLFW_KEY_4
+				model.setVertices(NO_COLOR_MODE);
+				break;
+			case 325: // GLFW_KEY_5
+				model.setVertices(RAND_COLOR_MODE);
+				break;
+			case 326: // GLFW_KEY_6
+				model.setVertices(TEXTURE_MODE);
 				break;
 		}
 	}

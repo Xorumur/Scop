@@ -6,9 +6,9 @@
 
 using namespace std;
 
-#define TEXT_MODE 8
-#define COLOR_MODE 6
-#define DOT_MODE 2
+#define TEXTURE_MODE 8
+#define RAND_COLOR_MODE 6
+#define NO_COLOR_MODE 3
 
 
 
@@ -22,18 +22,19 @@ class Model
 {
 	public:
 
-	string					filePath; // Path to the .obj file
+	string					filePath;		// Path to the .obj file
 
-	string					modelName; // o: Indicates the start of a new object in the .obj file
+	string					modelName;		// o: Indicates the start of a new object in the .obj file
 
-	string					textureLib; // mtllib: Specifies the texture library file.
-	Texture					texture; // usemtl: Specifies the texture used for the faces following it.
-	string					smoothing; // s: Smoothing on or off (on is the default)
+	string					textureLib;		// mtllib: Specifies the texture library file.
+	Texture					texture;		// usemtl: Specifies the texture used for the faces following it.
+	string					smoothing;		// s: Smoothing on or off (on is the default)
 
-	bool					textureAvailable = false;
+	vector<vector<float> >	vertices;			// v: Geometric vertices
+	vector<vector<float> >	verticeNormals;		// vn: Vertex normals
+	vector<vector<float> >	verticeTextCoords;	// vt: Texture coordinates
 
-	vector<vector<float> >	vertices; // v: Geometric vertices
-	vector<vector<int> >	faces; // f: Face elements
+	vector<vector<int> >	faces;				// f: Face elements
 
 	// Matrices to store the transformations
 	Mat4 					rotationMatrix = Mat4();
@@ -52,8 +53,12 @@ class Model
 	// Parse the .obj file and load the model
 	void					loadModel();
 	void					parseLine(string line);
-	void					parseVertex(string line);
-	void					parseFace(string line);
+
+	void					parseV(string line);
+	void					parseVN(string line);
+	void					parseVT(string line);
+	void					parseF(string line);
+
 	void					parseTextureLib(string line);
 	void					parseTexture(string line);
 	void					parseSmoothing(string line);

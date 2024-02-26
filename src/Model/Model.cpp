@@ -29,10 +29,10 @@ void Model::loadModel()
 void Model::parseLine(string line)
 {
 	if (line[0] == 'v' && line[1] == ' ') {
-		this->parseVertex(line);
+		this->parseV(line);
 	}
 	else if (line[0] == 'f' && line[1] == ' ') {
-		this->parseFace(line);
+		this->parseF(line);
 	}
 	else if (line[0] == 'm' && line[1] == 't' && line[2] == 'l' && line[3] == 'l' && line[4] == 'i' && line[5] == 'b') {
 		this->parseTextureLib(line);
@@ -48,7 +48,8 @@ void Model::parseLine(string line)
 	}
 }
 
-void Model::parseVertex(string line)
+// Parse the vertices (v) from the .obj file
+void Model::parseV(string line)
 {
 	vector<float> vertex;
 	stringstream ss(line);
@@ -62,12 +63,47 @@ void Model::parseVertex(string line)
 	this->vertices.push_back(vertex);
 }
 
-void Model::parseFace(string line)
+// Parse the vertex normals (vn) from the .obj file
+void Model::parseVN(string line)
+{
+	vector<float> vertex;
+	stringstream ss(line);
+	string word;
+	float value;
+
+	ss >> word;
+	while (ss >> value) {
+		vertex.push_back(value);
+	}
+	this->verticeNormals.push_back(vertex);
+}
+
+void Model::parseVT(string line)
+{
+	vector<float> vertex;
+	stringstream ss(line);
+	string word;
+	float value;
+
+	ss >> word;
+	while (ss >> value) {
+		vertex.push_back(value);
+	}
+	this->verticeTextCoords.push_back(vertex);
+}
+
+// Parse the face elements (f) from the .obj file
+void Model::parseF(string line)
 {
 	vector<int> face;
 	stringstream ss(line);
 	string word;
 	int value;
+
+	// need to be able to parse the faces that are in the format "f 1/1/1 2/2/2 3/3/3 4/4/4"
+	// and the ones that are in the format "f 1 2 3 4"
+
+
 
 	ss >> word;
 	while (ss >> value) {
@@ -95,18 +131,10 @@ void Model::parseTextureLib(string line)
 	ss >> value;
 	this->textureLib = value;
 	// The texture file path is the same as the object file path but with the .mtl extension
-	this->texture.filePath = this->filePath.substr(0, this->filePath.find_last_of('.')) + ".mtl";
+	this->texture.filePath = this->filePath.substr(0, this->filePath.find_last_of('.')) + ".bmp";
 
-	cout << "Texture file path: " << this->texture.filePath << endl;
-
-	cout << "Loading texture..." << endl;
-	this->textureAvailable = this->texture.loadTexture();
-
-	if (this->textureAvailable == false)
-		cout << "Texture not found / unavailable" << endl;
-	else
-		cout << "Texture loaded: " << this->texture << endl;
-
+	// Load the texture
+	this->texture.loadTexture();
 }
 
 void Model::parseTexture(string line)
@@ -220,16 +248,22 @@ void Model::setVertices(int mode)
 {
 	vector<vector<float>> newVertices;
 
-	if (mode == 0) {
+	if (mode == NO_COLOR_MODE) {
 		for (int i = 0; i < this->vertices.size(); i++) {
 			vector<float> vertex = this->vertices[i];
-			vertex.push_back(1.0f);
-			vertex.push_back(1.0f);
+			// Remove the color values at the end of the vertex
+			if (vertex.size() == 6) {
+				vertex.pop_back();
+				vertex.pop_back();
+				vertex.pop_back();
+			}
 			newVertices.push_back(vertex);
 		}
-		printVertices(newVertices);
+		this->currMode = NO_COLOR_MODE;
+		this->vertices = newVertices;
+		setupBuffers();
 	}
-	else if (mode == COLOR_MODE) {
+	else if (mode == RAND_COLOR_MODE) {
 		for (int i = 0; i < this->vertices.size(); i++) {
 			vector<float> vertex = this->vertices[i];
 			// Replace / Insert the color values at the end of the vertex / at the 3rd index
@@ -245,12 +279,20 @@ void Model::setVertices(int mode)
 			}
 			newVertices.push_back(vertex);
 		}
-		this->currMode = COLOR_MODE;
+		this->currMode = RAND_COLOR_MODE;
 		this->vertices = newVertices;
 		setupBuffers();
 	}
-
-	// this->vertices = this->vertices;
+	else if (mode == TEXTURE_MODE) {
+		// this->vertices = this->vertices;
+		// 	for (int i = 0; i < this->vertices.size(); i++) {
+		// 		vector<float> vertex = this->vertices[i];
+		// 		vertex.push_back(1.0f);
+		// 		vertex.push_back(1.0f);
+		// 		newVertices.push_back(vertex);
+		// 	}
+		// 	printVertices(newVertices);
+	}
 }
 
 void Model::loadTexture() {
@@ -279,7 +321,7 @@ void Model::setupBuffers() {
 	glEnableVertexAttribArray(0);
 
 	// colors
-	if (currMode == COLOR_MODE) {
+	if (currMode == RAND_COLOR_MODE) {
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, currMode * sizeof(float), (void*)(3 * sizeof(float))); // Décalage de 3 composantes
 		glEnableVertexAttribArray(1);
 	}
