@@ -8,10 +8,13 @@
 // #include "../vendors/GLFW/glfw3.h"
 // #include "../vendors/glad/glad.h"
 
+using namespace std;
+
 class Shader {
 	public:
 		unsigned int id;
 
+        Shader();
 		Shader(const char * vertexShaderPath, const char * fragmentShaderPath);
 		void activate();
 

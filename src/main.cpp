@@ -11,14 +11,17 @@
 #include "Math/Matrix.hpp"
 #include "Math/Vector.hpp"
 #include "Shader/Shader.hpp"
+//#include "Texture/Texture.hpp"
+
 using namespace std;
 
 Model	model;
+Shader shader;
+
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
-
 
 int main(int ac, char **av)
 {
@@ -30,9 +33,6 @@ int main(int ac, char **av)
 
 	model = Model(av[1]);
 
-	cout << "Loading model..." << endl;
-	model.loadModel();
-	cout << "Model loaded" << endl;
 
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -68,9 +68,12 @@ int main(int ac, char **av)
 		
 	glfwSetKeyCallback(window, keyCallback);
 	glfwSetScrollCallback(window, scrollCallback);
+	cout << "Loading model..." << endl;
+	model.loadModel();
+	cout << "Model loaded" << endl;
 
-	Shader shader("src/assets/vertex_core.glsl", "src/assets/fragment_core.glsl");
 
+    shader = Shader("./src/assets/vertex_core.glsl", "./src/assets/fragment_core.glsl");
 	// model.setupBuffers();
 
     model.setVertices(TEXTURE_MODE);
@@ -78,12 +81,20 @@ int main(int ac, char **av)
 	model.Scale(0.2);
 	shader.activate();
 
-    model.loadTextureFromFile();
+    //model.loadTextureFromFile();
 
+    model.loadTexture();
+    // model.textures[0].setActive(shader);
+    model.switchTexture(shader);
+
+    //texture1 = Texture("./resources/container.jpg");
+    //texture2 = Texture("./resources/texture.jpg");
+
+    //texture1.setActive(shader);
     // Activer la texture et définir son indice d'échantillonnage à 0
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, model.textureID);
-    glUniform1i(glGetUniformLocation(shader.id, "ourTexture"), 0);  // 0 correspond à l'indice d'échantillonnage de la texture
+    // glActiveTexture(model.textures[0].textureID);
+    // glBindTexture(GL_TEXTURE_2D, model.textures[0].textureID);
+    // glUniform1i(glGetUniformLocation(shader.id, "ourTexture"), 0);  // 0 correspond à l'indice d'échantillonnage de la texture
 
 	cout << model << endl;
 
@@ -95,7 +106,9 @@ int main(int ac, char **av)
 		glShadeModel(GL_SMOOTH);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
-		model.Rotate(0.1f, 1.f, 1.f, 1.f);
+        glBindTexture(GL_TEXTURE_2D, model.textures[model.currTexture].textureID);
+
+		model.Rotate(0.1f, 0.1f, 0.1f, 0.1f);
 
 		glUniformMatrix4fv(glGetUniformLocation(shader.id, "transform"), 1, GL_FALSE, model.createFinalMatrix().GetDataPtr());
 		
@@ -147,6 +160,11 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 			case GLFW_KEY_E: // GLFW_KEY_2
 				// only edges mode
 				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+				break;
+            case GLFW_KEY_T: // GLFW_KEY_2
+				// only edges mode
+                cout << "Switching texture" << endl;
+				model.switchTexture(shader);
 				break;
 			case GLFW_KEY_DOWN: // GLFW_KEY_3
 				// only vertices mode

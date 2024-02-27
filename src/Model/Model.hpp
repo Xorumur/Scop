@@ -4,6 +4,8 @@
 #include "../Texture/Texture.hpp"
 #include "../Math/Matrix.hpp"
 #include "../vendors/stb/stb_image.h"
+#include "../Texture/Texture.hpp"
+#include "../Shader/Shader.hpp"
 using namespace std;
 
 #define TEXTURE_MODE 8
@@ -18,6 +20,7 @@ using namespace std;
 
 using namespace std;
 
+class Texture;
 class Model
 {
 	public:
@@ -27,7 +30,6 @@ class Model
 	string					modelName;		// o: Indicates the start of a new object in the .obj file
 
 	string					textureLib;		// mtllib: Specifies the texture library file.
-	Texture					texture;		// usemtl: Specifies the texture used for the faces following it.
 	string					smoothing;		// s: Smoothing on or off (on is the default)
 
 	vector<vector<float> >	vertices;			// v: Geometric vertices
@@ -50,6 +52,9 @@ class Model
     int width, height, nrChannels;
     unsigned char *data;
     unsigned int textureID;
+
+    vector<Texture> textures;
+    int             currTexture = 0;
 
 	Model();
 	Model(string filePath);
@@ -76,6 +81,7 @@ class Model
 
 	// Textures functions
 	void 					loadTexture();
+    void                    switchTexture(const Shader& shader);
     // Function to load a texture from a file
     void					loadTextureFromFile();
 

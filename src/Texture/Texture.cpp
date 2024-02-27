@@ -15,7 +15,7 @@ Texture::Texture(string filePath) : Texture() {
     // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    this->data = stbi_load("./resources/container.jpg", &this->width, &this->height, &this->nrChannels, 0);
+    this->data = stbi_load(filePath.c_str(), &this->width, &this->height, &this->nrChannels, 0);
     if (this->data) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, this->width, this->height, 0, GL_RGB, GL_UNSIGNED_BYTE, this->data);
         glGenerateMipmap(GL_TEXTURE_2D);
@@ -24,10 +24,19 @@ Texture::Texture(string filePath) : Texture() {
         cout << "Failed to load texture" << endl;
     }
     stbi_image_free(this->data);
+    this->active = false;
     cout << "Texture loaded" << endl;
 }
 
 Texture::~Texture() { }
+
+void    Texture::setActive(Shader shader) {
+    glActiveTexture(this->textureID);
+    glBindTexture(GL_TEXTURE_2D, this->textureID);
+    glUniform1i(glGetUniformLocation(shader.id, "ourTexture"), 0);  // 0 correspond à l'indice d'échantillonnage de la texture
+    
+    this->active = true;
+}
 
 bool	Texture::loadTexture() {
 	// ifstream	file(this->filePath);

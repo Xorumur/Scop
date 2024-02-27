@@ -1,5 +1,9 @@
 #include "Shader.hpp"
 
+Shader::Shader() {
+    this->id = 0;
+}
+
 Shader::Shader(const char * vertexShaderPath, const char * fragmentShaderPath) {
 	int success;
 	char infoLog[512];

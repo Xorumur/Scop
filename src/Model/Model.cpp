@@ -336,7 +336,29 @@ void Model::setVertices(int mode)
 }
 
 void Model::loadTexture() {
-	this->texture.loadTexture();
+	Texture texture1("./resources/container.jpg");
+    this->textures.push_back(texture1);
+    Texture texture2("./resources/texture.jpg");
+    this->textures.push_back(texture2);
+    cout << "Texture loaded" << endl;
+}
+
+void Model::switchTexture(const Shader& shader) {
+    cout << currTexture << endl;
+    if (this->currTexture == 0) {
+        this->textures[1].setActive(shader);
+        this->currTexture = 1;
+    } else {
+        this->textures[0].setActive(shader);
+        this->currTexture = 0;
+    }
+    // if (!this->textures[0].active) {
+    //     this->textures[1].setActive(shader);
+    //     cout << "Texture 1 active" << endl;
+    // } else {
+    //     this->textures[0].setActive(shader);
+    //     cout << "Texture 0 active" << endl;
+    // }
 }
 
 void Model::setupBuffers() {
@@ -406,7 +428,7 @@ void Model::loadTextureFromFile() {
     // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    this->data = stbi_load("./resources/container.jpg", &this->width, &this->height, &this->nrChannels, 0);
+    this->data = stbi_load("./resources/texture.jpg", &this->width, &this->height, &this->nrChannels, 0);
     if (this->data) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, this->width, this->height, 0, GL_RGB, GL_UNSIGNED_BYTE, this->data);
         glGenerateMipmap(GL_TEXTURE_2D);
@@ -426,6 +448,6 @@ ostream& operator<<(ostream& os, const Model& model)
 	os << "  Vertices: " << model.vertices.size() << endl;
 	os << "  Faces: " << model.faces.size() << endl;
 	os << "  Texture Library: " << model.textureLib << endl;
-	os << model.texture << endl;
+	os << endl;
 	return os;
 }
