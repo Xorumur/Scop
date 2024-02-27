@@ -116,6 +116,7 @@ void Model::parseF(string line)
 		vector<int> newFace2 = { face[2], face[3], face[0] };
 		this->faces.push_back(newFace1);
 		this->faces.push_back(newFace2);
+        cout << "Triangulated face" << endl;
 	}
 	else
 		this->faces.push_back(face);
@@ -131,10 +132,10 @@ void Model::parseTextureLib(string line)
 	ss >> value;
 	this->textureLib = value;
 	// The texture file path is the same as the object file path but with the .mtl extension
-	this->texture.filePath = this->filePath.substr(0, this->filePath.find_last_of('.')) + ".bmp";
+	//this->texture.filePath = this->filePath.substr(0, this->filePath.find_last_of('.')) + ".bmp";
 
 	// Load the texture
-	this->texture.loadTexture();
+	//this->texture.loadTexture();
 }
 
 void Model::parseTexture(string line)
@@ -145,7 +146,7 @@ void Model::parseTexture(string line)
 
 	ss >> word;
 	ss >> value;
-	this->texture.textureName = value;
+	//this->texture.textureName = value;
 }
 
 void Model::parseSmoothing(string line)
@@ -201,16 +202,42 @@ Mat4 Model::createFinalMatrix()
 float*					Model::transformVertices() {
 	float* vertices = new float[this->vertices.size() * currMode];
 	int i = 0;
+
+    // print vertices
+    for (auto& vertex : this->vertices) {
+        cout << "Vertex: ";
+        for (auto& value : vertex) {
+            cout << value << " ";
+        }
+        cout << endl;
+    }
+
 	for (auto& vertex : this->vertices) {
 		vertices[i] = vertex[0];
 		vertices[i + 1] = vertex[1];
 		vertices[i + 2] = vertex[2];
+        // cout << "Vertex: " << vertex.size() << endl;
 		if (vertex.size() == 6 ) {
 			vertices[i + 3] = vertex[3];
 			vertices[i + 4] = vertex[4];
 			vertices[i + 5] = vertex[5];
 			i += 6;
 		}
+        else if (vertex.size() == 5) {
+            vertices[i + 3] = vertex[3];
+            vertices[i + 4] = vertex[4];
+            vertices[i + 5] = vertex[5];
+            vertices[i + 6] = vertex[6];
+            i += 5;
+        }
+        else if (vertex.size() == 8) {
+            vertices[i + 3] = vertex[3];
+            vertices[i + 4] = vertex[4];
+            vertices[i + 5] = vertex[5];
+            vertices[i + 6] = vertex[6];
+            vertices[i + 7] = vertex[7];
+            i += 8;
+        }
 		else {
 			i += 3;
 		}
@@ -252,11 +279,12 @@ void Model::setVertices(int mode)
 		for (int i = 0; i < this->vertices.size(); i++) {
 			vector<float> vertex = this->vertices[i];
 			// Remove the color values at the end of the vertex
-			if (vertex.size() == 6) {
-				vertex.pop_back();
-				vertex.pop_back();
-				vertex.pop_back();
-			}
+			// if (vertex.size() == 6) {
+			// 	vertex.pop_back();
+			// 	vertex.pop_back();
+			// 	vertex.pop_back();
+			// }
+            vertex.erase(vertex.begin() + 3, vertex.end());
 			newVertices.push_back(vertex);
 		}
 		this->currMode = NO_COLOR_MODE;
@@ -267,16 +295,17 @@ void Model::setVertices(int mode)
 		for (int i = 0; i < this->vertices.size(); i++) {
 			vector<float> vertex = this->vertices[i];
 			// Replace / Insert the color values at the end of the vertex / at the 3rd index
-			if (vertex.size() == 3) {
+            vertex.erase(vertex.begin() + 3, vertex.end());
+			// if (vertex.size() == 3) {
 				vertex.push_back(randomFloat());
 				vertex.push_back(randomFloat());
 				vertex.push_back(randomFloat());
-			}
-			else {
-				vertex[3] = randomFloat();
-				vertex[4] = randomFloat();
-				vertex[5] = randomFloat();
-			}
+			// }
+			// else {
+			// 	vertex[3] = randomFloat();
+			// 	vertex[4] = randomFloat();
+			// 	vertex[5] = randomFloat();
+			// }
 			newVertices.push_back(vertex);
 		}
 		this->currMode = RAND_COLOR_MODE;
@@ -284,14 +313,25 @@ void Model::setVertices(int mode)
 		setupBuffers();
 	}
 	else if (mode == TEXTURE_MODE) {
-		// this->vertices = this->vertices;
-		// 	for (int i = 0; i < this->vertices.size(); i++) {
-		// 		vector<float> vertex = this->vertices[i];
-		// 		vertex.push_back(1.0f);
-		// 		vertex.push_back(1.0f);
-		// 		newVertices.push_back(vertex);
-		// 	}
-		// 	printVertices(newVertices);
+		// Keep 3 vertices for each vertex
+        for (int i = 0; i < this->vertices.size(); i++) {
+            vector<float> vertex = this->vertices[i];
+            if (vertex.size() != 3) {
+                vertex.erase(vertex.begin() + 3, vertex.end());
+            }
+            vertex.push_back(randomFloat());
+            vertex.push_back(randomFloat());
+            vertex.push_back(randomFloat());
+
+            float t = atan2(vertex[2], vertex[0]);
+            float p = acos(vertex[1] / sqrt(pow(vertex[0], 2) + pow(vertex[1], 2) + pow(vertex[2], 2)));
+            vertex.push_back((t + M_PI) / (2.f * M_PI));
+            vertex.push_back(p / M_PI);
+            newVertices.push_back(vertex);
+        }
+        this->currMode = TEXTURE_MODE;
+        this->vertices = newVertices;
+        setupBuffers();
 	}
 }
 
@@ -300,8 +340,11 @@ void Model::loadTexture() {
 }
 
 void Model::setupBuffers() {
+
 	float* vertices = this->transformVertices();
 	int* faces = this->transformFaces(); 
+
+    cout << "Curr Mode : " << currMode << endl;
 
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
@@ -324,7 +367,22 @@ void Model::setupBuffers() {
 	if (currMode == RAND_COLOR_MODE) {
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, currMode * sizeof(float), (void*)(3 * sizeof(float))); // Décalage de 3 composantes
 		glEnableVertexAttribArray(1);
-	}
+	} else if (currMode == TEXTURE_MODE) {
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, currMode * sizeof(float), (void*)(3 * sizeof(float))); // Décalage de 3 composantes
+		glEnableVertexAttribArray(1);
+        glBindTexture(GL_TEXTURE_2D, this->textureID);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, currMode * sizeof(float), (void*)(6 * sizeof(float))); // Décalage de 3 composantes
+        glEnableVertexAttribArray(2);
+
+        // printVertices(this->vertices);
+        // for (auto& vertex : this->vertices) {
+        //     cout << "Vertex: ";
+        //     for (auto& value : vertex) {
+        //         cout << value << " ";
+        //     }
+        //     cout << endl;
+        // }
+    }
 
 	// set up EBO
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
@@ -335,6 +393,29 @@ void Model::deleteBuffers() {
 	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(1, &VBO);
 	glDeleteBuffers(1, &EBO);
+}
+
+void Model::loadTextureFromFile() {
+    glGenTextures(1, &this->textureID);
+    glBindTexture(GL_TEXTURE_2D, this->textureID);
+
+    // set the texture wrapping/filtering options (on the currently bound texture object)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    this->data = stbi_load("./resources/container.jpg", &this->width, &this->height, &this->nrChannels, 0);
+    if (this->data) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, this->width, this->height, 0, GL_RGB, GL_UNSIGNED_BYTE, this->data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else {
+        cout << "Failed to load texture" << endl;
+    }
+    stbi_image_free(this->data);
+    cout << "Texture loaded" << endl;
 }
 
 

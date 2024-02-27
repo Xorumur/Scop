@@ -7,28 +7,23 @@
 #include <fstream>
 #include <sstream>
 
+#include "../vendors/stb/stb_image.h"
+#include "../include/lib.h"
+
+
 using namespace std;
 
 class Texture
 {
-	public:
 
-	string					filePath;
-	string					textureName;
+    public:
+        int width, height, nrChannels;
+        unsigned char *data;
+        unsigned int textureID;
 
-	// float					ambient[3]; // Ka: Ambient color
-	// float					diffuse[3]; // Kd: Diffuse color
-	// float					specular[3]; // Ks: Specular color
-
-	// float					Ns; // Ns: Specular exponent
-	// float 					Ni; // Ni: Optical density
-
-	// float					d; // d: Dissolve factor (transparency)
-	// float					illum; // illum: Illumination model
-
-	Texture();
-	Texture(string path);
-	~Texture();
+        Texture();
+        Texture(string path);
+        ~Texture();
 
 	bool					loadTexture();
 

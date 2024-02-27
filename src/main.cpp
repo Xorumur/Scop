@@ -71,10 +71,19 @@ int main(int ac, char **av)
 
 	Shader shader("src/assets/vertex_core.glsl", "src/assets/fragment_core.glsl");
 
-	model.setupBuffers();
+	// model.setupBuffers();
+
+    model.setVertices(TEXTURE_MODE);
 
 	model.Scale(0.2);
 	shader.activate();
+
+    model.loadTextureFromFile();
+
+    // Activer la texture et définir son indice d'échantillonnage à 0
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, model.textureID);
+    glUniform1i(glGetUniformLocation(shader.id, "ourTexture"), 0);  // 0 correspond à l'indice d'échantillonnage de la texture
 
 	cout << model << endl;
 
@@ -86,7 +95,7 @@ int main(int ac, char **av)
 		glShadeModel(GL_SMOOTH);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
-		model.Rotate(0.1f, 0.f, 1.f, 0.f);
+		model.Rotate(0.1f, 1.f, 1.f, 1.f);
 
 		glUniformMatrix4fv(glGetUniformLocation(shader.id, "transform"), 1, GL_FALSE, model.createFinalMatrix().GetDataPtr());
 		
@@ -131,25 +140,25 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 			case GLFW_KEY_D:
 				model.Rotate(10.f, 0.f, -1.f, 0.f);
 				break;
-			case 321: // GLFW_KEY_1
+			case GLFW_KEY_R: // GLFW_KEY_1
 				// default mode
 				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 				break;
-			case 322: // GLFW_KEY_2
+			case GLFW_KEY_E: // GLFW_KEY_2
 				// only edges mode
 				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 				break;
-			case 323: // GLFW_KEY_3
+			case GLFW_KEY_DOWN: // GLFW_KEY_3
 				// only vertices mode
 				glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
 				break;
-			case 324: // GLFW_KEY_4
+			case GLFW_KEY_LEFT: // GLFW_KEY_4
 				model.setVertices(NO_COLOR_MODE);
 				break;
-			case 325: // GLFW_KEY_5
+			case GLFW_KEY_RIGHT: // GLFW_KEY_5
 				model.setVertices(RAND_COLOR_MODE);
 				break;
-			case 326: // GLFW_KEY_6
+			case GLFW_KEY_UP: // GLFW_KEY_6
 				model.setVertices(TEXTURE_MODE);
 				break;
 		}

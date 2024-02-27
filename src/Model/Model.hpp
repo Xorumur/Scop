@@ -3,7 +3,7 @@
 
 #include "../Texture/Texture.hpp"
 #include "../Math/Matrix.hpp"
-
+#include "../vendors/stb/stb_image.h"
 using namespace std;
 
 #define TEXTURE_MODE 8
@@ -41,10 +41,15 @@ class Model
 	Mat4 					scaleMatrix = Mat4();
 	Mat4 					translationMatrix = Mat4();
 
-	int						currMode = 3;
+	int						currMode = 8;
 
 	// VAO, VBO, and EBO
 	unsigned int			VAO, VBO, EBO;
+
+    // texture
+    int width, height, nrChannels;
+    unsigned char *data;
+    unsigned int textureID;
 
 	Model();
 	Model(string filePath);
@@ -71,6 +76,8 @@ class Model
 
 	// Textures functions
 	void 					loadTexture();
+    // Function to load a texture from a file
+    void					loadTextureFromFile();
 
 	// Function to transform vertices into a 1D array of floats
 	float*					transformVertices();
