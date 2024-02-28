@@ -19,24 +19,30 @@ using namespace std;
 
 using namespace std;
 
-// class Texture;
+class FaceVertex {
+	public:
+		int		vertexIndex;	// v: Geometric vertex
+		int		normalIndex;	// vn: Vertex normals
+		int		textureIndex;	// vt: Texture coordinates
+};
 
 class Model
 {
 	public:
 
-	string					filePath;		// Path to the .obj file
+	string					filePath;			// Path to the .obj file
 
-	string					modelName;		// o: Indicates the start of a new object in the .obj file
+	string					modelName;			// o: Indicates the start of a new object in the .obj file
 
-	string					mtlLib;		// mtllib: Specifies the texture library file.
-	string					smoothing;		// s: Smoothing on or off (on is the default)
+	string					mtlLib;				// mtllib: Specifies the texture library file.
+	string					smoothing;			// s: Smoothing on or off (on is the default)
 
 	vector<vector<float> >	vertices;			// v: Geometric vertices
 	vector<vector<float> >	verticeNormals;		// vn: Vertex normals
 	vector<vector<float> >	verticeTextCoords;	// vt: Texture coordinates
 
-	vector<vector<int> >	faces;				// f: Face elements
+	// Faces should be [n][3] where n is the number of faces and 3 is the number of vertices per face
+	vector<vector<FaceVertex>>	faces;			// f: Face elements
 
 	// Matrices to store the transformations
 	Mat4 					rotationMatrix = Mat4();

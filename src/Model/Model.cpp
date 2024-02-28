@@ -45,6 +45,10 @@ void Model::parseLine(string line)
 	}
 	else if (line[0] == 'o' && line[1] == ' ') {
 		this->parseObjectName(line);
+	} else if (line[0] == 'v' && line[1] == 'n') {
+		this->parseVN(line);
+	} else if (line[0] == 'v' && line[1] == 't') {
+		this->parseVT(line);
 	}
 }
 
@@ -63,6 +67,21 @@ void Model::parseV(string line)
 	this->vertices.push_back(vertex);
 }
 
+// Parse the texture coordinates (vt) from the .obj file
+void Model::parseVT(string line)
+{
+	vector<float> vertex;
+	stringstream ss(line);
+	string word;
+	float value;
+
+	ss >> word;
+	while (ss >> value) {
+		vertex.push_back(value);
+	}
+	this->verticeTextCoords.push_back(vertex);
+}
+
 // Parse the vertex normals (vn) from the .obj file
 void Model::parseVN(string line)
 {
@@ -78,43 +97,55 @@ void Model::parseVN(string line)
 	this->verticeNormals.push_back(vertex);
 }
 
-void Model::parseVT(string line)
-{
-	vector<float> vertex;
-	stringstream ss(line);
-	string word;
-	float value;
-
-	ss >> word;
-	while (ss >> value) {
-		vertex.push_back(value);
-	}
-	this->verticeTextCoords.push_back(vertex);
-}
-
 // Parse the face elements (f) from the .obj file
 void Model::parseF(string line)
 {
-	vector<int> face;
-	stringstream ss(line);
-	string word;
-	int value;
+
+	vector<FaceVertex>		face;
+	istringstream			iss(line);
+	string					token;
 
 	// need to be able to parse the faces that are in the format "f 1/1/1 2/2/2 3/3/3 4/4/4"
 	// and the ones that are in the format "f 1 2 3 4"
 
-	ss >> word;
-	while (ss >> value) {
-		face.push_back(value);
+	while (iss >> token) {
+		if (token == "f")
+			continue;		
+		FaceVertex faceVertex;
+
+		// If the face is in the format "f 1/1/1 2/2/2 3/3/3 4/4/4"
+		if (token.find("/") != string::npos) {
+			istringstream faceVertexStream(token);
+			string faceVertexToken;
+			int i = 0;
+			while (getline(faceVertexStream, faceVertexToken, '/')) {
+				if (i == 0) {
+					faceVertex.vertexIndex = stoi(faceVertexToken);
+				}
+				else if (i == 1) {
+					faceVertex.textureIndex = stoi(faceVertexToken);
+				}
+				else if (i == 2) {
+					faceVertex.normalIndex = stoi(faceVertexToken);
+				}
+				i++;
+			}
+		}
+		// If the face is in the format "f 1 2 3 4"
+		else {
+			faceVertex.vertexIndex = stoi(token);
+			faceVertex.normalIndex = 0;
+			faceVertex.textureIndex = 0;
+		}
+		face.push_back(faceVertex);
 	}
 
-	// Triangulate the face if it has 4 vertices
+	// Triangulate the face if it has 4 vertices (quad)
 	if (face.size() == 4) {
-		vector<int> newFace1 = { face[0], face[1], face[2] };
-		vector<int> newFace2 = { face[2], face[3], face[0] };
+		vector<FaceVertex> newFace1 = { face[0], face[1], face[2] };
+		vector<FaceVertex> newFace2 = { face[2], face[3], face[0] };
 		this->faces.push_back(newFace1);
 		this->faces.push_back(newFace2);
-        cout << "Triangulated face" << endl;
 	}
 	else
 		this->faces.push_back(face);
@@ -129,11 +160,6 @@ void Model::parseMtlLib(string line)
 	ss >> word;
 	ss >> value;
 	this->mtlLib = value;
-	// The texture file path is the same as the object file path but with the .mtl extension
-	//this->texture.filePath = this->filePath.substr(0, this->filePath.find_last_of('.')) + ".bmp";
-
-	// Load the texture
-	//this->texture.loadTexture();
 }
 
 void Model::parseMtlName(string line)
@@ -144,7 +170,6 @@ void Model::parseMtlName(string line)
 
 	ss >> word;
 	ss >> value;
-	//this->texture.textureName = value;
 }
 
 void Model::parseSmoothing(string line)
@@ -197,18 +222,9 @@ Mat4 Model::createFinalMatrix()
 	return finalMatrix;
 }
 
-float*					Model::transformVertices() {
+float*	Model::transformVertices() {
 	float* vertices = new float[this->vertices.size() * currMode];
 	int i = 0;
-
-	// print vertices
-	// for (auto& vertex : this->vertices) {
-	// 	cout << "Vertex: ";
-	// 	for (auto& value : vertex) {
-	// 		cout << value << " ";
-	// 	}
-	// 	cout << endl;
-	// }
 
 	for (auto& vertex : this->vertices) {
 		vertices[i] = vertex[0];
@@ -243,26 +259,16 @@ float*					Model::transformVertices() {
 	return vertices;
 }
 
-int*					Model::transformFaces() {
+int*	Model::transformFaces() {
 	int* faces = new int[this->faces.size() * 3];
 	int i = 0;
 	for (auto& face : this->faces) {
-		faces[i] = face[0] - 1;
-		faces[i + 1] = face[1] - 1;
-		faces[i + 2] = face[2] - 1;
+		faces[i] = face[0].vertexIndex - 1;
+		faces[i + 1] = face[1].vertexIndex - 1;
+		faces[i + 2] = face[2].vertexIndex - 1;
 		i += 3;
 	}
 	return faces;
-}
-
-void printVertices(vector<vector<float>> vertices) {
-	for (auto& vertex : vertices) {
-		cout << "Vertex: ";
-		for (auto& value : vertex) {
-			cout << value << " ";
-		}
-		cout << endl;
-	}
 }
 
 float randomFloat() {
@@ -352,7 +358,8 @@ void Model::setupBuffers() {
 	if (currMode == RAND_COLOR_MODE) {
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, currMode * sizeof(float), (void*)(3 * sizeof(float))); // Décalage de 3 composantes
 		glEnableVertexAttribArray(1);
-	} else if (currMode == TEXTURE_MODE) {
+	}
+	else if (currMode == TEXTURE_MODE) {
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, currMode * sizeof(float), (void*)(3 * sizeof(float))); // Décalage de 3 composantes
 		glEnableVertexAttribArray(1);
 		glBindTexture(GL_TEXTURE_2D, this->textureID);
@@ -376,8 +383,9 @@ ostream& operator<<(ostream& os, const Model& model)
 	os << "Model: " << model.modelName << endl;
 	os << "  Smoothing: " << model.smoothing << endl;
 	os << "  Vertices: " << model.vertices.size() << endl;
+	os << "  VerticeNormals: " << model.verticeNormals.size() << endl;
+	os << "  VerticeTextCoords: " << model.verticeTextCoords.size() << endl;
 	os << "  Faces: " << model.faces.size() << endl;
-	os << "  Texture Library: " << model.mtlLib << endl;
 	os << endl;
 	return os;
 }

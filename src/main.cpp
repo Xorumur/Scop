@@ -44,7 +44,7 @@ int main(int ac, char **av)
 		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	#endif
 
-	GLFWwindow* window = glfwCreateWindow(800, 600, "Scope", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(800, 600, "Scop", NULL, NULL);
 
 	if (window == NULL)
 	{

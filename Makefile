@@ -6,12 +6,12 @@ APP_LINKER:= -L./src/vendors/GLFW/lib -lglfw3
 CPP_FILES = ${wildcard src/*.cpp} ${wildcard src/Texture/*.cpp} ${wildcard src/Model/*.cpp} ${wildcard src/Shader/*.cpp}
 C_FILES = ./src/vendors/glad/glad.c
 
-TARGET = scope
+TARGET = scop
 
 all:
-	$(CXX) $(C_FILES) $(CPP_FILES) $(APP_INCLUDES) $(APP_LINKER) -o scope
+	$(CXX) $(C_FILES) $(CPP_FILES) $(APP_INCLUDES) $(APP_LINKER) -o scop
 
 clean:
-	rm -rf scope
+	rm -rf scop
 
 .PHONY: all clean
