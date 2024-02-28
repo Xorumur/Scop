@@ -9,27 +9,24 @@
 
 #include "../vendors/stb/stb_image.h"
 #include "../include/lib.h"
-#include "../Shader/Shader.hpp"
 
 using namespace std;
 
 class Texture
 {
+	public:
+		int                 width, height, nrChannels;
+		unsigned char       *data;
+		unsigned int        textureID;
+		bool                active = false;
 
-    public:
-        int                 width, height, nrChannels;
-        unsigned char       *data;
-        unsigned int        textureID;
-        bool                active = false;
+		Texture();
+		~Texture();
 
-        Texture();
-        Texture(string path);
-        ~Texture();
+	bool					loadTexture(const char* filePath);
+	void                    setActive(bool active);
 
-    void                    bindShader(const Shader& shader);
-	bool					loadTexture();
-    void                    setActive(Shader shader);
-    void                    unactive();
+	bool					isFileTexture(const char* filePath);
 
 	// print operator overload
 	friend ostream& operator<<(ostream& os, const Texture& texture);

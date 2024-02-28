@@ -18,10 +18,10 @@ using namespace std;
 Model	model;
 Shader shader;
 
-
-void framebufferSizeCallback(GLFWwindow* window, int width, int height);
-void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
-void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
+void	framebufferSizeCallback(GLFWwindow* window, int width, int height);
+void	keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+void	scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
+void	dropCallback(GLFWwindow* window, int count, const char* paths[]);
 
 int main(int ac, char **av)
 {
@@ -68,47 +68,33 @@ int main(int ac, char **av)
 		
 	glfwSetKeyCallback(window, keyCallback);
 	glfwSetScrollCallback(window, scrollCallback);
+	glfwSetDropCallback(window, dropCallback);
+
 	cout << "Loading model..." << endl;
 	model.loadModel();
 	cout << "Model loaded" << endl;
 
-
     shader = Shader("./src/assets/vertex_core.glsl", "./src/assets/fragment_core.glsl");
-	// model.setupBuffers();
 
-    model.setVertices(TEXTURE_MODE);
+    model.setVertices(NO_COLOR_MODE);
 
 	model.Scale(0.2);
+
 	shader.activate();
-
-    //model.loadTextureFromFile();
-
-    model.loadTexture();
-    // model.textures[0].setActive(shader);
-    model.switchTexture(shader);
-
-    //texture1 = Texture("./resources/container.jpg");
-    //texture2 = Texture("./resources/texture.jpg");
-
-    //texture1.setActive(shader);
-    // Activer la texture et définir son indice d'échantillonnage à 0
-    // glActiveTexture(model.textures[0].textureID);
-    // glBindTexture(GL_TEXTURE_2D, model.textures[0].textureID);
-    // glUniform1i(glGetUniformLocation(shader.id, "ourTexture"), 0);  // 0 correspond à l'indice d'échantillonnage de la texture
 
 	cout << model << endl;
 
-	while(!glfwWindowShouldClose(window))
+	while (!glfwWindowShouldClose(window))
 	{
 		// rendering
 		glClearColor(0.2f, 0.4f, 0.8f, 1.0f);
 		glEnable(GL_DEPTH_TEST);
 		glShadeModel(GL_SMOOTH);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
-        glBindTexture(GL_TEXTURE_2D, model.textures[model.currTexture].textureID);
 
-		model.Rotate(0.1f, 0.1f, 0.1f, 0.1f);
+        // glBindTexture(GL_TEXTURE_2D, model.texture.textureID);
+
+		model.Rotate(0.2f, 0.0f, 0.1f, 0.0f);
 
 		glUniformMatrix4fv(glGetUniformLocation(shader.id, "transform"), 1, GL_FALSE, model.createFinalMatrix().GetDataPtr());
 		
@@ -153,20 +139,15 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 			case GLFW_KEY_D:
 				model.Rotate(10.f, 0.f, -1.f, 0.f);
 				break;
-			case GLFW_KEY_R: // GLFW_KEY_1
+			case GLFW_KEY_E: // GLFW_KEY_1
 				// default mode
 				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 				break;
-			case GLFW_KEY_E: // GLFW_KEY_2
+			case GLFW_KEY_R: // GLFW_KEY_2
 				// only edges mode
 				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 				break;
-            case GLFW_KEY_T: // GLFW_KEY_2
-				// only edges mode
-                cout << "Switching texture" << endl;
-				model.switchTexture(shader);
-				break;
-			case GLFW_KEY_DOWN: // GLFW_KEY_3
+			case GLFW_KEY_T: // GLFW_KEY_3
 				// only vertices mode
 				glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
 				break;
@@ -192,4 +173,15 @@ void scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 	// Zoom out
 	else
 		model.Scale(0.9f);
+}
+
+void	dropCallback(GLFWwindow* window, int count, const char* paths[]) {
+	for (int i = 0; i < count; i++) {
+		const char* path = paths[i];
+		
+		cout << "Dropped file: " << path << endl;
+
+		if (model.texture.loadTexture(path))
+			model.setVertices(TEXTURE_MODE);
+	}
 }

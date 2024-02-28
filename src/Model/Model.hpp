@@ -4,15 +4,14 @@
 #include "../Texture/Texture.hpp"
 #include "../Math/Matrix.hpp"
 #include "../vendors/stb/stb_image.h"
-#include "../Texture/Texture.hpp"
 #include "../Shader/Shader.hpp"
+#include "../Texture/Texture.hpp"
+
 using namespace std;
 
 #define TEXTURE_MODE 8
 #define RAND_COLOR_MODE 6
 #define NO_COLOR_MODE 3
-
-
 
 // A shaderProgram consists of at least two types of shaders:
 // 	-	Vertex Shader (vertexShader): Processes each vertex of a 3D model, transforming its position and passing data to the next stages of the pipeline.
@@ -20,7 +19,8 @@ using namespace std;
 
 using namespace std;
 
-class Texture;
+// class Texture;
+
 class Model
 {
 	public:
@@ -29,7 +29,7 @@ class Model
 
 	string					modelName;		// o: Indicates the start of a new object in the .obj file
 
-	string					textureLib;		// mtllib: Specifies the texture library file.
+	string					mtlLib;		// mtllib: Specifies the texture library file.
 	string					smoothing;		// s: Smoothing on or off (on is the default)
 
 	vector<vector<float> >	vertices;			// v: Geometric vertices
@@ -48,13 +48,11 @@ class Model
 	// VAO, VBO, and EBO
 	unsigned int			VAO, VBO, EBO;
 
-    // texture
-    int width, height, nrChannels;
-    unsigned char *data;
-    unsigned int textureID;
-
-    vector<Texture> textures;
-    int             currTexture = 0;
+	// texture
+	Texture					texture;
+	int						width, height, nrChannels;
+	unsigned char			*data;
+	unsigned int			textureID;
 
 	Model();
 	Model(string filePath);
@@ -62,6 +60,7 @@ class Model
 
 	// Parse the .obj file and load the model
 	void					loadModel();
+
 	void					parseLine(string line);
 
 	void					parseV(string line);
@@ -69,8 +68,8 @@ class Model
 	void					parseVT(string line);
 	void					parseF(string line);
 
-	void					parseTextureLib(string line);
-	void					parseTexture(string line);
+	void					parseMtlLib(string line);
+	void					parseMtlName(string line);
 	void					parseSmoothing(string line);
 	void					parseObjectName(string line);
 
@@ -80,10 +79,7 @@ class Model
 	void					setVertices(int mode);
 
 	// Textures functions
-	void 					loadTexture();
-    void                    switchTexture(const Shader& shader);
-    // Function to load a texture from a file
-    void					loadTextureFromFile();
+	void 					loadTexture(const char* path);
 
 	// Function to transform vertices into a 1D array of floats
 	float*					transformVertices();
