@@ -59,6 +59,7 @@ class Model
 	int						width, height, nrChannels;
 	unsigned char			*data;
 	unsigned int			textureID;
+	unsigned int			texLoc;
 
 	Model();
 	Model(string filePath);

@@ -119,15 +119,16 @@ void Model::parseF(string line)
 			string faceVertexToken;
 			int i = 0;
 			while (getline(faceVertexStream, faceVertexToken, '/')) {
-				if (i == 0) {
+				if (faceVertexToken.empty()) {
+					i++;
+					continue;
+				}
+				if (i == 0)
 					faceVertex.vertexIndex = stoi(faceVertexToken);
-				}
-				else if (i == 1) {
+				else if (i == 1)
 					faceVertex.textureIndex = stoi(faceVertexToken);
-				}
-				else if (i == 2) {
+				else if (i == 2)
 					faceVertex.normalIndex = stoi(faceVertexToken);
-				}
 				i++;
 			}
 		}
@@ -316,6 +317,17 @@ void Model::setVertices(int mode)
 			vertex.push_back(randomFloat());
 			vertex.push_back(randomFloat());
 
+			// if we have parsed the texture coordinates, we can use them to map the texture to the model
+			// if (this->verticeTextCoords.size() > 0) {
+			// 	vector<float> textCoords = this->verticeTextCoords[i];
+			// 	vertex.push_back(textCoords[0]);
+			// 	vertex.push_back(textCoords[1]);
+			// }
+			// else {
+			// 	vertex.push_back(0.f);
+			// 	vertex.push_back(0.f);
+			// }
+
 			float t = atan2(vertex[2], vertex[0]);
 			float p = acos(vertex[1] / sqrt(pow(vertex[0], 2) + pow(vertex[1], 2) + pow(vertex[2], 2)));
 			vertex.push_back((t + M_PI) / (2.f * M_PI));
@@ -356,10 +368,12 @@ void Model::setupBuffers() {
 
 	// colors
 	if (currMode == RAND_COLOR_MODE) {
+		glUniform1i(texLoc, 0);
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, currMode * sizeof(float), (void*)(3 * sizeof(float))); // Décalage de 3 composantes
 		glEnableVertexAttribArray(1);
 	}
 	else if (currMode == TEXTURE_MODE) {
+		glUniform1i(texLoc, 1);
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, currMode * sizeof(float), (void*)(3 * sizeof(float))); // Décalage de 3 composantes
 		glEnableVertexAttribArray(1);
 		glBindTexture(GL_TEXTURE_2D, this->textureID);

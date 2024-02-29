@@ -80,6 +80,8 @@ int main(int ac, char **av)
 
 	model.Scale(0.2);
 
+	model.texLoc =  glGetUniformLocation(shader.id, "tex");
+
 	shader.activate();
 
 	cout << model << endl;
@@ -92,14 +94,11 @@ int main(int ac, char **av)
 		glShadeModel(GL_SMOOTH);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // glBindTexture(GL_TEXTURE_2D, model.texture.textureID);
-
 		model.Rotate(0.2f, 0.0f, 0.1f, 0.0f);
 
 		glUniformMatrix4fv(glGetUniformLocation(shader.id, "transform"), 1, GL_FALSE, model.createFinalMatrix().GetDataPtr());
 		
 		glDrawElements(GL_TRIANGLES, model.faces.size() * 3, GL_UNSIGNED_INT, 0);
-		// glDrawArrays(GL_TRIANGLES, 0, model.vertices.size() * 3);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();    
@@ -111,7 +110,6 @@ int main(int ac, char **av)
 
 	return 0;
 }
-
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height)
 {
