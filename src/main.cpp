@@ -5,7 +5,7 @@
 #include <streambuf>
 #include <string>
 
-#include "include/lib.h"
+#include "lib.h"
 
 #include "Model/Model.hpp"
 #include "Math/Matrix.hpp"
@@ -74,7 +74,7 @@ int main(int ac, char **av)
 	model.loadModel();
 	cout << "Model loaded" << endl;
 
-    shader = Shader("./src/assets/vertex_core.glsl", "./src/assets/fragment_core.glsl");
+    shader = Shader("./src/Shader/shaders/vertex_core.glsl", "./src/Shader/shaders/fragment_core.glsl");
 
     model.setVertices(NO_COLOR_MODE);
 

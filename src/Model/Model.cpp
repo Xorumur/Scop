@@ -1,5 +1,5 @@
 #include "Model.hpp"
-#include "../include/lib.h"
+#include "../lib.h"
 
 using namespace std;
 

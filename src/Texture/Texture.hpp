@@ -8,7 +8,7 @@
 #include <sstream>
 
 #include "../vendors/stb/stb_image.h"
-#include "../include/lib.h"
+#include "../lib.h"
 
 using namespace std;
 
