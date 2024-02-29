@@ -24,6 +24,7 @@ void Model::loadModel()
 	while (getline(file, line))
 		this->parseLine(line);
 	file.close();
+	this->normalizeVertices();
 }
 
 void Model::parseLine(string line)
@@ -223,6 +224,44 @@ Mat4 Model::createFinalMatrix()
 	return finalMatrix;
 }
 
+void	Model::normalizeVertices() {
+	float minX = 0;
+	float minY = 0;
+	float minZ = 0;
+	float maxX = 0;
+	float maxY = 0;
+	float maxZ = 0;
+
+	for (auto& vertex : this->vertices) {
+		if (vertex[0] < minX)
+			minX = vertex[0];
+		if (vertex[1] < minY)
+			minY = vertex[1];
+		if (vertex[2] < minZ)
+			minZ = vertex[2];
+		if (vertex[0] > maxX)
+			maxX = vertex[0];
+		if (vertex[1] > maxY)
+			maxY = vertex[1];
+		if (vertex[2] > maxZ)
+			maxZ = vertex[2];
+	}
+	float x = (maxX + minX) / 2;
+	float y = (maxY + minY) / 2;
+	float z = (maxZ + minZ) / 2;
+	float max = maxX - minX;
+	if (max < maxY - minY)
+		max = maxY - minY;
+	if (max < maxZ - minZ)
+		max = maxZ - minZ;
+	for (auto& vertex : this->vertices) {
+		vertex[0] = (vertex[0] - x) / max;
+		vertex[1] = (vertex[1] - y) / max;
+		vertex[2] = (vertex[2] - z) / max;
+	}
+
+}
+
 float*	Model::transformVertices() {
 	float* vertices = new float[this->vertices.size() * currMode];
 	int i = 0;
@@ -324,14 +363,11 @@ void Model::setVertices(int mode)
 			// 	vertex.push_back(textCoords[1]);
 			// }
 			// else {
-			// 	vertex.push_back(0.f);
-			// 	vertex.push_back(0.f);
+				float t = atan2(vertex[2], vertex[0]);
+				float p = acos(vertex[1] / sqrt(pow(vertex[0], 2) + pow(vertex[1], 2) + pow(vertex[2], 2)));
+				vertex.push_back((t + M_PI) / (2.f * M_PI));
+				vertex.push_back(p / M_PI);
 			// }
-
-			float t = atan2(vertex[2], vertex[0]);
-			float p = acos(vertex[1] / sqrt(pow(vertex[0], 2) + pow(vertex[1], 2) + pow(vertex[2], 2)));
-			vertex.push_back((t + M_PI) / (2.f * M_PI));
-			vertex.push_back(p / M_PI);
 			newVertices.push_back(vertex);
 		}
 		this->currMode = TEXTURE_MODE;

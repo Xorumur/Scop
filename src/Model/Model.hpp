@@ -90,6 +90,7 @@ class Model
 
 	// Function to transform vertices into a 1D array of floats
 	float*					transformVertices();
+	void					normalizeVertices();
 
 	// Function to transform faces into a 1D array of ints
 	int*					transformFaces();

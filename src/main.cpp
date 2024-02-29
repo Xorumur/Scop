@@ -78,8 +78,6 @@ int main(int ac, char **av)
 
     model.setVertices(NO_COLOR_MODE);
 
-	model.Scale(0.2);
-
 	model.texLoc =  glGetUniformLocation(shader.id, "tex");
 
 	shader.activate();
