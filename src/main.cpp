@@ -62,9 +62,9 @@ int main(int ac, char **av)
 		return -1;
 	}    
 
-	glViewport(0, 0, 800, 600);
-
 	glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);  
+
+	glViewport(0, 0, 1600, 1200);
 		
 	glfwSetKeyCallback(window, keyCallback);
 	glfwSetScrollCallback(window, scrollCallback);
@@ -76,12 +76,11 @@ int main(int ac, char **av)
 
     shader = Shader("./src/Shader/shaders/vertex_core.glsl", "./src/Shader/shaders/fragment_core.glsl");
 
-    model.setVertices(NO_COLOR_MODE);
-
 	model.texLoc =  glGetUniformLocation(shader.id, "tex");
 
 	shader.activate();
 
+    model.setVertices(NO_COLOR_MODE);
 	cout << model << endl;
 
 	while (!glfwWindowShouldClose(window))
