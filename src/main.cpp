@@ -23,16 +23,7 @@ void	keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 void	scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 void	dropCallback(GLFWwindow* window, int count, const char* paths[]);
 
-int main(int ac, char **av)
-{
-	if (av[1] == NULL)
-	{
-		cout << "No object file specified" << endl;
-		return 1;
-	}
-
-	model = Model(av[1]);
-
+GLFWwindow *initWindow() {
 
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -50,7 +41,7 @@ int main(int ac, char **av)
 	{
 		cout << "Could not create window" << endl;
 		glfwTerminate();
-		return -1;
+		return NULL;
 	}
 
 	glfwMakeContextCurrent(window);
@@ -59,20 +50,38 @@ int main(int ac, char **av)
 	{
 		cout << "Failed to initialize GLAD" << endl;
 		glfwTerminate();
-		return -1;
-	}    
+		return NULL;
+	}
 
-	glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);  
 
 	glViewport(0, 0, 1600, 1200);
-		
+
+	glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);  
 	glfwSetKeyCallback(window, keyCallback);
 	glfwSetScrollCallback(window, scrollCallback);
 	glfwSetDropCallback(window, dropCallback);
+	return window;
+}
 
-	cout << "Loading model..." << endl;
+int main(int ac, char **av)
+{
+	if (av[1] == NULL)
+	{
+		cout << "No object file specified" << endl;
+		return 1;
+	}
+
+	GLFWwindow *window = initWindow();
+	if (!window) return 1;
+
+	model = Model(av[1]);
 	model.loadModel();
-	cout << "Model loaded" << endl;
+
+	if (model.vertices.size() == 0 || model.faces.size() == 0)
+	{
+		cout << "Exiting: Model invalid." << endl;
+		return 1;
+	}
 
     shader = Shader("./src/Shader/shaders/vertex_core.glsl", "./src/Shader/shaders/fragment_core.glsl");
 
@@ -81,6 +90,7 @@ int main(int ac, char **av)
 	shader.activate();
 
     model.setVertices(NO_COLOR_MODE);
+
 	cout << model << endl;
 
 	while (!glfwWindowShouldClose(window))
@@ -91,7 +101,7 @@ int main(int ac, char **av)
 		glShadeModel(GL_SMOOTH);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		model.Rotate(0.2f, 0.0f, 0.1f, 0.0f);
+		model.Rotate(0.2f, 0.0f, 1.f, 0.0f);
 
 		glUniformMatrix4fv(glGetUniformLocation(shader.id, "transform"), 1, GL_FALSE, model.createFinalMatrix().GetDataPtr());
 		
